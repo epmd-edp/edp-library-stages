@@ -25,7 +25,7 @@ class SonarNpmApplicationLibrary {
     void run(context) {
         def scannerHome = script.tool 'SonarQube Scanner'
         script.dir("${context.workDir}") {
-            if (context.job.type == "codereview") {
+           /* if (context.job.type == "codereview") {
                 script.withSonarQubeEnv('Sonar') {
                     script.sh "${scannerHome}/bin/sonar-scanner -Dsonar.analysis.mode=preview " +
                             "-Dsonar.report.export.path=sonar-report.json" +
@@ -38,14 +38,12 @@ class SonarNpmApplicationLibrary {
 //                        reviewConfig: [issueFilterConfig: [newIssuesOnly: false, changedLinesOnly: false,
 //                                                           severity: 'CRITICAL']],
 //                        scoreConfig: [category: 'Sonar-Verified', issueFilterConfig: [severity: 'CRITICAL']]
-            }
+            } */
 
             script.withSonarQubeEnv('Sonar') {
                 script.sh "${scannerHome}/bin/sonar-scanner " +
                         "-Dsonar.projectKey=${context.codebase.name} " +
-                        "-Dsonar.projectName=${context.codebase.name} " +
-                        "-Dsonar.branch=" +
-                        "${context.job.type == "codereview" ? context.git.changeName : context.git.branch}"
+                        "-Dsonar.projectName=${context.codebase.name} "
             }
             script.timeout(time: 10, unit: 'MINUTES') {
                 def qualityGateResult = script.waitForQualityGate()
