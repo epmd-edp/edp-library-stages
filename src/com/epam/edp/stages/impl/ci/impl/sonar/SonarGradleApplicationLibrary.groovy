@@ -25,14 +25,13 @@ class SonarGradleApplicationLibrary {
 
     void run(context) {
         script.dir("${context.workDir}") {
-            if (context.job.type == "codereview") {
+            /*if (context.job.type == "codereview") {
                 script.withCredentials([script.usernamePassword(credentialsId: "${context.nexus.credentialsId}",
                         passwordVariable: 'PASSWORD', usernameVariable: 'USERNAME')]) {
                     script.withSonarQubeEnv('Sonar') {
                         script.sh "${context.buildTool.command} -PnexusLogin=${script.USERNAME} " +
                                 "-PnexusPassword=${script.PASSWORD} " +
                                 "sonarqube -Dsonar.analysis.mode=preview -Dsonar.report.export.path=sonar-report.json" +
-                                " -Dsonar.branch=codereview -Dsonar.projectKey=${context.codebase.name}" +
                                 " -Dsonar.projectName=${context.codebase.name}" +
                                 " -Dsonar.java.binaries=build/classes"
                     }
@@ -45,7 +44,7 @@ class SonarGradleApplicationLibrary {
 //                        reviewConfig: [issueFilterConfig: [newIssuesOnly: false, changedLinesOnly: false,
 //                                                           severity: 'CRITICAL']],
 //                        scoreConfig: [category: 'Sonar-Verified', issueFilterConfig: [severity: 'CRITICAL']]
-            }
+            }*/
 
             script.withCredentials([script.usernamePassword(credentialsId: "${context.nexus.credentialsId}",
                     passwordVariable: 'PASSWORD', usernameVariable: 'USERNAME')]) {
@@ -53,9 +52,7 @@ class SonarGradleApplicationLibrary {
                     script.sh "${context.buildTool.command} -PnexusLogin=${script.USERNAME} " +
                             "-PnexusPassword=${script.PASSWORD} " +
                             "sonarqube -Dsonar.projectKey=${context.codebase.name} " +
-                            "-Dsonar.projectName=${context.codebase.name} " +
-                            "-Dsonar.branch=" +
-                            "${context.job.type == "codereview" ? context.git.changeName : context.git.branch}"
+                            "-Dsonar.projectName=${context.codebase.name} "
                 }
             }
             script.timeout(time: 10, unit: 'MINUTES') {
