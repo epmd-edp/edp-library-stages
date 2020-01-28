@@ -26,7 +26,7 @@ class SonarDotnetApplicationLibrary {
     void run(context) {
         def scannerHome = script.tool 'SonarScannerMSBuild'
         script.dir("${context.workDir}") {
-            if (context.job.type == "codereview") {
+/*            if (context.job.type == "codereview") {
                 script.withSonarQubeEnv('Sonar') {
                     script.sh """
                 dotnet ${scannerHome}/SonarScanner.MSBuild.dll begin /k:${context.codebase.name} \
@@ -47,14 +47,13 @@ class SonarDotnetApplicationLibrary {
 //                        reviewConfig: [issueFilterConfig: [newIssuesOnly: false, changedLinesOnly: false,
 //                                                           severity: 'MAJOR']],
 //                        scoreConfig: [category: 'Sonar-Verified', issueFilterConfig: [severity: 'MAJOR']]
-            }
+            } */
 
             script.withSonarQubeEnv('Sonar') {
                 script.sh """
                 dotnet ${scannerHome}/SonarScanner.MSBuild.dll begin /k:${context.codebase.name} \
                 /k:${context.codebase.name} \
                 /n:${context.codebase.name} \
-                /d:sonar.branch=${context.job.type == "codereview" ? context.git.changeName : context.git.branch} \
                 /d:sonar.cs.opencover.reportsPaths=${context.workDir}/*Tests*/*.xml
                 dotnet build ${context.buildTool.sln_filename}
                 dotnet ${scannerHome}/SonarScanner.MSBuild.dll end
