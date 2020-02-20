@@ -21,18 +21,34 @@ import com.epam.edp.stages.impl.ci.Stage
 @Stage(name = "get-version", buildTool = ["npm"], type = [ProjectType.APPLICATION, ProjectType.LIBRARY])
 class GetVersionNpmApplicationLibrary {
     Script script
+    def updateCodebaseBuildNumber(buildNumber, context) {
+        buildNumber++
+        script.sh"""
+            kubectl patch codebasebranches.v2.edp.epam.com ${context.codebase.config.name}-${context.git.branch} --type=merge -p '{\"spec\": {\"build\": "${buildNumber}"}}'
+        """
+    }
 
     void run(context) {
         script.dir("${context.workDir}") {
-            context.codebase.version = script.sh(
-                    script: """
-                        node -p "require('./package.json').version"
-                    """,
-                    returnStdout: true
-            ).trim().toLowerCase()
+            if (context.codebase.config.versioningType == "edp") {
+                context.codebase.version = script.sh(
+                script: """
+                    sed -i "/version/c\\  \\"version\\": \\"${context.codebase.config.startFrom}-${context.codebase.config.codebase_branch.build_number.get(0)}\\"," package.json
+                    echo "${context.codebase.config.startFrom}-${context.codebase.config.codebase_branch.build_number.get(0)}"
+                """, returnStdout: true
+                ).trim().toLowerCase()
+                context.codebase.buildVersion = "${context.codebase.version}"
+                updateCodebaseBuildNumber(context.codebase.config.codebase_branch.build_number.get(0), context)
+            } else {
+                context.codebase.version = script.sh(
+                script: """
+                    node -p "require('./package.json').version"
+                """, returnStdout: true
+                ).trim().toLowerCase()
+                context.codebase.buildVersion = "${context.codebase.version}-${script.BUILD_NUMBER}"
+            }
         }
         context.job.setDisplayName("${script.currentBuild.number}-${context.git.branch}-${context.codebase.version}")
-        context.codebase.buildVersion = "${context.codebase.version}-${script.BUILD_NUMBER}"
         context.codebase.deployableModuleDir = "${context.workDir}"
         script.println("[JENKINS][DEBUG] Application version - ${context.codebase.version}")
     }
