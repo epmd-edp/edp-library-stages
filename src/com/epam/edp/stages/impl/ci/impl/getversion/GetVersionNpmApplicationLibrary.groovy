@@ -24,15 +24,27 @@ class GetVersionNpmApplicationLibrary {
 
     void run(context) {
         script.dir("${context.workDir}") {
-            context.codebase.version = script.sh(
-                    script: """
-                        node -p "require('./package.json').version"
-                    """,
-                    returnStdout: true
-            ).trim().toLowerCase()
+            context.codebase.startFrom = "9.9.1"
+            context.codebase.build_number = "0"
+            context.codebase.versioning_type = "edp"
+
+            if (context.codebase.versioning_type == "edp") {
+                context.codebase.version = script.sh(script: """
+                    sed -i "/version/c/\\  \\"version\\": \\"${context.codebase.versioning.startFrom}-${context.codebase.build_number}\\"," package.json
+                    echo "${context.codebase.versioning.startFrom}-${context.codebase.build_number}"
+                """)
+                context.codebase.buildVersion = "${context.codebase.version}"
+            } else {
+                context.codebase.version = script.sh(
+                        script: """
+                            node -p "require('./package.json').version"
+                        """,
+                        returnStdout: true
+                ).trim().toLowerCase()
+                context.codebase.buildVersion = "${context.codebase.version}-${script.BUILD_NUMBER}"
+            }
         }
         context.job.setDisplayName("${script.currentBuild.number}-${context.git.branch}-${context.codebase.version}")
-        context.codebase.buildVersion = "${context.codebase.version}-${script.BUILD_NUMBER}"
         context.codebase.deployableModuleDir = "${context.workDir}"
         script.println("[JENKINS][DEBUG] Application version - ${context.codebase.version}")
     }
