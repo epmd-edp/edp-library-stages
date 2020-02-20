@@ -24,15 +24,31 @@ class GetVersionNpmApplicationLibrary {
 
     void run(context) {
         script.dir("${context.workDir}") {
-            context.codebase.version = script.sh(
-                    script: """
-                        node -p "require('./package.json').version"
-                    """,
-                    returnStdout: true
-            ).trim().toLowerCase()
+            //context.codebase.startFrom = "9.9.1"
+            //context.codebase.build_number = "0"
+            //context.codebase.versioning_type = "edp"
+            def startFrom = "9.9.1"
+            def build_number = "0"
+            def versioning_type = "edp"
+
+            if (versioning_type == "edp") {
+                context.codebase.version = script.sh(
+                script: """
+                    sed -i "/version/c\\  \\"version\\": \\"${startFrom}-${build_number}\\"," package.json
+                    echo "${startFrom}-${build_number}"
+                """, returnStdout: true
+                ).trim().toLowerCase()
+                context.codebase.buildVersion = "${context.codebase.version}"
+            } else {
+                context.codebase.version = script.sh(
+                script: """
+                    node -p "require('./package.json').version"
+                """, returnStdout: true
+                ).trim().toLowerCase()
+                context.codebase.buildVersion = "${context.codebase.version}-${script.BUILD_NUMBER}"
+            }
         }
         context.job.setDisplayName("${script.currentBuild.number}-${context.git.branch}-${context.codebase.version}")
-        context.codebase.buildVersion = "${context.codebase.version}-${script.BUILD_NUMBER}"
         context.codebase.deployableModuleDir = "${context.workDir}"
         script.println("[JENKINS][DEBUG] Application version - ${context.codebase.version}")
     }
