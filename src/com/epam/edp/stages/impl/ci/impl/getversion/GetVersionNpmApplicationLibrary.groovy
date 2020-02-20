@@ -24,12 +24,22 @@ class GetVersionNpmApplicationLibrary {
 
     void run(context) {
         script.dir("${context.workDir}") {
-            context.codebase.version = script.sh(
-                    script: """
-                        node -p "require('./package.json').version"
-                    """,
-                    returnStdout: true
-            ).trim().toLowerCase()
+            context.codebase.versioning.startFrom = "0.0.1"
+            context.codebase.versioning.type = "edp"
+
+            if (context.codebase.versioning.type == "edp") {
+                context.codebase.version = script.sh(script: """
+                    sed -i "/version/c/\\  \\"version\\": \\"${context.codebase.versioning.startFrom}\\"," package.json
+                    echo "${context.codebase.versioning.startFrom}"
+                """)
+            } else {
+                context.codebase.version = script.sh(
+                        script: """
+                            node -p "require('./package.json').version"
+                        """,
+                        returnStdout: true
+                ).trim().toLowerCase()
+            }
         }
         context.job.setDisplayName("${script.currentBuild.number}-${context.git.branch}-${context.codebase.version}")
         context.codebase.buildVersion = "${context.codebase.version}-${script.BUILD_NUMBER}"

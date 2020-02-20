@@ -1,3 +1,196 @@
-@Library(['edp-library-stages', 'edp-library-pipelines']) _
+/* Copyright 2019 EPAM Systems.
 
-CreateRelease()
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+
+See the License for the specific language governing permissions and
+limitations under the License. */
+
+import groovy.json.*
+import jenkins.model.Jenkins
+
+Jenkins jenkins = Jenkins.instance
+def stages = [:]
+
+stages['Code-review-application'] = '[{"name": "gerrit-checkout"},{"name": "compile"},{"name": "tests"},' +
+        '{"name": "sonar"}]'
+stages['Code-review-library'] = '[{"name": "gerrit-checkout"},{"name": "compile"},{"name": "tests"},' +
+        '{"name": "sonar"}]'
+stages['Code-review-autotests'] = '[{"name": "gerrit-checkout"},{"name": "tests"},{"name": "sonar"}]'
+stages['Code-review-default'] = '[{"name": "gerrit-checkout"}]'
+
+stages['Build-library-maven'] = '[{"name": "checkout"},{"name": "get-version"},{"name": "compile"},' +
+        '{"name": "tests"},{"name": "sonar"},{"name": "build"},{"name": "push"},{"name": "git-tag"}]'
+stages['Build-library-npm'] = stages['Build-library-maven']
+stages['Build-library-gradle'] = stages['Build-library-maven']
+stages['Build-library-dotnet'] = '[{"name": "checkout"},{"name": "get-version"},{"name": "compile"},' +
+        '{"name": "tests"},{"name": "sonar"},{"name": "push"},{"name": "git-tag"}]'
+
+stages['Build-application-maven'] = '[{"name": "checkout"},{"name": "get-version"},{"name": "compile"},' +
+        '{"name": "tests"},{"name": "sonar"},{"name": "build"},{"name": "build-image"},' +
+        '{"name": "push"},{"name": "git-tag"}]'
+stages['Build-application-npm'] = stages['Build-application-maven']
+stages['Build-application-gradle'] = stages['Build-application-maven']
+stages['Build-application-dotnet'] = '[{"name": "checkout"},{"name": "get-version"},{"name": "compile"},' +
+        '{"name": "tests"},{"name": "sonar"},{"name": "build-image"},' +
+        '{"name": "push"},{"name": "git-tag"}]'
+
+stages['Create-release'] = '[{"name": "checkout"},{"name": "create-branch"},{"name": "trigger-job"}]'
+
+def buildToolsOutOfTheBox = ["maven","npm","gradle","dotnet","none"]
+def defaultBuild = '[{"name": "checkout"}]'
+
+def codebaseName = "${NAME}"
+def buildTool = "${BUILD_TOOL}"
+def gitServerCrName = "${GIT_SERVER_CR_NAME}"
+def gitServerCrVersion = "${GIT_SERVER_CR_VERSION}"
+def gitCredentialsId = "${GIT_CREDENTIALS_ID ? GIT_CREDENTIALS_ID : 'gerrit-ciuser-sshkey'}"
+def repositoryPath = "${REPOSITORY_PATH}"
+
+def codebaseFolder = jenkins.getItem(codebaseName)
+if (codebaseFolder == null) {
+    folder(codebaseName)
+}
+
+createListView(codebaseName, "Releases")
+createReleasePipeline("Create-release-${codebaseName}", codebaseName, stages["Create-release"], "create-release.groovy",
+        repositoryPath, gitCredentialsId, gitServerCrName, gitServerCrVersion)
+
+if (buildTool.toString().equalsIgnoreCase('none')) {
+    return true
+}
+
+if (BRANCH) {
+    def branch = "${BRANCH}"
+    createListView(codebaseName, "${branch.toUpperCase()}")
+
+    def type = "${TYPE}"
+    def supBuildTool = buildToolsOutOfTheBox.contains(buildTool.toString())
+    def crKey = supBuildTool ? "Code-review-${type}" : "Code-review-default"
+    createCiPipeline("Code-review-${codebaseName}", codebaseName, stages[crKey], "code-review.groovy",
+            repositoryPath, gitCredentialsId, branch, gitServerCrName, gitServerCrVersion)
+
+    def buildKey = "Build-${type}-${buildTool.toLowerCase()}".toString()
+    if (type.equalsIgnoreCase('application') || type.equalsIgnoreCase('library')) {
+        def jobExists = false
+        if("${watchBranch.toUpperCase()}-${pipelineName}".toString() in Jenkins.instance.getAllItems().collect{it.name})
+            jobExists = true
+            createCiPipeline("Build-${codebaseName}", codebaseName, stages.get(buildKey, defaultBuild), "build.groovy",
+                repositoryPath, gitCredentialsId, branch, gitServerCrName, gitServerCrVersion)
+        if(!jobExists)
+            queue("${codebaseName}/${watchBranch.toUpperCase()}-${pipelineName}")
+    }
+}
+
+def createCiPipeline(pipelineName, codebaseName, codebaseStages, pipelineScript, repository, credId, watchBranch = "master", gitServerCrName, gitServerCrVersion) {
+    pipelineJob("${codebaseName}/${watchBranch.toUpperCase()}-${pipelineName}") {
+        logRotator {
+            numToKeep(10)
+            daysToKeep(7)
+        }
+        triggers {
+            gerrit {
+                events {
+                    if (pipelineName.contains("Build"))
+                        changeMerged()
+                    else
+                        patchsetCreated()
+                }
+                project("plain:${codebaseName}", ["plain:${watchBranch}"])
+            }
+        }
+        definition {
+            cpsScm {
+                scm {
+                    git {
+                        remote {
+                            url(repository)
+                            credentials(credId)
+                        }
+                        branches("${watchBranch}")
+                        scriptPath("${pipelineScript}")
+                    }
+                }
+                parameters {
+                    stringParam("GIT_SERVER_CR_NAME", "${gitServerCrName}", "Name of Git Server CR to generate link to Git server")
+                    stringParam("GIT_SERVER_CR_VERSION", "${gitServerCrVersion}", "Version of GitServer CR Resource")
+                    stringParam("STAGES", "${codebaseStages}", "Consequence of stages in JSON format to be run during execution")
+                    stringParam("GERRIT_PROJECT_NAME", "${codebaseName}", "Gerrit project name(Codebase name) to be build")
+                    if (pipelineName.contains("Build"))
+                        stringParam("BRANCH", "${watchBranch}", "Branch to build artifact from")
+                }
+            }
+        }
+    }
+}
+
+def createReleasePipeline(pipelineName, codebaseName, codebaseStages, pipelineScript, repository, credId, gitServerCrName, gitServerCrVersion) {
+    pipelineJob("${codebaseName}/${pipelineName}") {
+        logRotator {
+            numToKeep(14)
+            daysToKeep(30)
+        }
+        definition {
+            cpsScm {
+                scm {
+                    git {
+                        remote {
+                            url(repository)
+                            credentials(credId)
+                        }
+                        branches("master")
+                        scriptPath("${pipelineScript}")
+                    }
+                }
+                parameters {
+                    stringParam("STAGES", "${codebaseStages}", "")
+                    if (pipelineName.contains("Create-release")) {
+                        stringParam("GERRIT_PROJECT", "${codebaseName}", "")
+                        stringParam("RELEASE_NAME", "", "Name of the release(branch to be created)")
+                        stringParam("COMMIT_ID", "", "Commit ID that will be used to create branch from for new release. If empty, HEAD of master will be used")
+                        stringParam("GIT_SERVER_CR_NAME", "${gitServerCrName}", "Name of Git Server CR to generate link to Git server")
+                        stringParam("GIT_SERVER_CR_VERSION", "${gitServerCrVersion}", "Version of GitServer CR Resource")
+                        stringParam("REPOSITORY_PATH", "${repository}", "Full repository path")
+                    }
+                }
+            }
+        }
+    }
+}
+
+def createListView(codebaseName, branchName) {
+    listView("${codebaseName}/${branchName}") {
+        if (branchName.toLowerCase() == "releases") {
+            jobFilters {
+                regex {
+                    matchType(MatchType.INCLUDE_MATCHED)
+                    matchValue(RegexMatchValue.NAME)
+                    regex("^Create-release.*")
+                }
+            }
+        } else {
+            jobFilters {
+                regex {
+                    matchType(MatchType.INCLUDE_MATCHED)
+                    matchValue(RegexMatchValue.NAME)
+                    regex("^${branchName}-(Code-review|Build).*")
+                }
+            }
+        }
+        columns {
+            status()
+            weather()
+            name()
+            lastSuccess()
+            lastFailure()
+            lastDuration()
+            buildButton()
+        }
+    }
+}
