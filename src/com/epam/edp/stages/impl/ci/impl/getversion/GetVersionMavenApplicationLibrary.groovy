@@ -21,13 +21,13 @@ import com.epam.edp.stages.impl.ci.Stage
 @Stage(name = "get-version", buildTool = ["maven"], type = [ProjectType.APPLICATION, ProjectType.LIBRARY])
 class GetVersionMavenApplicationLibrary {
     Script script
-    def setVersionToArtifact(buildNumber, context) {
+    def setVersionToArtifact(buildNumber, branchVersion, context) {
        def newBuildNumber = ++buildNumber
        script.sh """
-            sed -i "0,/<version>.*<\\/version>/s/<version>.*<\\/version>/<version>${context.codebase.config.startFrom}-${newBuildNumber}<\\/version>/" pom.xml
+            sed -i "0,/<version>.*<\\/version>/s/<version>.*<\\/version>/<version>${branchVersion}-${newBuildNumber}<\\/version>/" pom.xml
         """
 
-       return "${context.codebase.config.startFrom}-${newBuildNumber}"
+       return "${branchVersion}-${newBuildNumber}"
     }
 
     def updateCodebaseBranchCR(buildNumber, context) {
@@ -42,10 +42,13 @@ class GetVersionMavenApplicationLibrary {
             script.withCredentials([script.usernamePassword(credentialsId: "${context.nexus.credentialsId}",
                     passwordVariable: 'PASSWORD', usernameVariable: 'USERNAME')]) {
                 if (context.codebase.config.versioningType == "edp") {
-                    context.codebase.version = setVersionToArtifact(context.codebase.config.codebase_branch.build_number.get(0).toInteger(), context)
-                    context.codebase.buildVersion = "${context.codebase.version}"
+                    def branchIndex = context.codebase.config.codebase_branch.branchName.findIndexOf{it == context.git.branch}
+                    def build = context.codebase.config.codebase_branch.build_number.get(branchIndex).toInteger()
+                    def version = context.codebase.config.codebase_branch.version.get(branchIndex)
 
-                    updateCodebaseBranchCR(context.codebase.config.codebase_branch.build_number.get(0).toInteger(), context)
+                    context.codebase.version = setVersionToArtifact(build, version, context)
+                    context.codebase.buildVersion = "${context.codebase.version}"
+                    updateCodebaseBranchCR(build, context)
                  } else {
                     context.codebase.version = script.sh(
                             script: """
