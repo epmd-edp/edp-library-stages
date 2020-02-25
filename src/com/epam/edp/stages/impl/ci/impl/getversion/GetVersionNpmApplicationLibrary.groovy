@@ -22,12 +22,13 @@ import com.epam.edp.stages.impl.ci.Stage
 class GetVersionNpmApplicationLibrary {
     Script script
     def setVersionToArtifact(buildNumber, context) {
+       def startFrom = context.platform.getJsonPathValue("codebasebranches.v2.edp.epam.com", "${context.codebase.config.name}-${context.git.branch}", ".spec.version")
        def newBuildNumber = ++buildNumber
        script.sh """
-            sed -i "/version/c\\  \\"version\\": \\"${context.codebase.config.startFrom}-${newBuildNumber}\\"," package.json
+            sed -i "/version/c\\  \\"version\\": \\"${startFrom}-${newBuildNumber}\\"," package.json
         """
 
-       return "${context.codebase.config.startFrom}-${newBuildNumber}"
+       return "${startFrom}-${newBuildNumber}"
     }
 
     def updateCodebaseBranchCR(buildNumber, context) {
@@ -40,10 +41,11 @@ class GetVersionNpmApplicationLibrary {
     void run(context) {
         script.dir("${context.workDir}") {
             if (context.codebase.config.versioningType == "edp") {
-                context.codebase.version = setVersionToArtifact(context.codebase.config.codebase_branch.build_number.get(0).toInteger(), context)
-                context.codebase.buildVersion = "${context.codebase.version}"
+                def build = context.platform.getJsonPathValue("codebasebranches.v2.edp.epam.com", "${context.codebase.config.name}-${context.git.branch}", ".spec.build")
 
-                updateCodebaseBranchCR(context.codebase.config.codebase_branch.build_number.get(0).toInteger(), context)
+                context.codebase.version = setVersionToArtifact(build, context)
+                context.codebase.buildVersion = "${context.codebase.version}"
+                updateCodebaseBranchCR(build, context)
             } else {
                 context.codebase.version = script.sh(
                     script: """
