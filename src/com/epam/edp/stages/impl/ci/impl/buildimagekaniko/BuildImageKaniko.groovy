@@ -33,32 +33,29 @@ class BuildImageKaniko {
             envList.add(['name': name, 'value': value])
     }
 
-    def setKanikoTemplate(outputFilePath, buildPodName, resultImageName, dockerRegistry, context) {
+    def setKanikoTemplate(outputFilePath, buildPodName, resultImageName, dockerRegistryHost, context) {
         def kanikoTemplateFilePath = new FilePath(Jenkins.getInstance().getComputer(script.env['NODE_NAME']).getChannel(), outputFilePath)
         def kanikoTemplateData = context.platform.getJsonPathValue("cm", "kaniko-template", ".data.kaniko\\.json")
         def parsedKanikoTemplateData = new JsonSlurperClassic().parseText(kanikoTemplateData)
         parsedKanikoTemplateData.metadata.name = buildPodName
 
-        def awsCliInitContainerEnvs = parsedKanikoTemplateData.spec.initContainers[1].env
-        setEnvVariable(awsCliInitContainerEnvs, "REPO_NAME", resultImageName, true)
-        setEnvVariable(awsCliInitContainerEnvs, "AWS_DEFAULT_REGION", dockerRegistry.region)
+        def awsCliInitContainerEnvs = parsedKanikoTemplateData.spec.initContainers.find { it.name == "init-repository" }.env
+        if (awsCliInitContainerEnvs) {
+            setEnvVariable(awsCliInitContainerEnvs, "REPO_NAME", resultImageName, true)
+            setEnvVariable(awsCliInitContainerEnvs, "AWS_DEFAULT_REGION", getAwsRegion())
+        }
 
-        dockerRegistry.region = awsCliInitContainerEnvs.find { it.name == "AWS_DEFAULT_REGION" }.value
-        dockerRegistry.host = "${dockerRegistry.accountId}.dkr.ecr.${dockerRegistry.region}.amazonaws.com"
-        parsedKanikoTemplateData.spec.containers[0].args[0] = "--destination=${dockerRegistry.host}/${resultImageName}:${context.git.branch}-${context.codebase.buildVersion}"
+        parsedKanikoTemplateData.spec.containers[0].args[0] = "--destination=${dockerRegistryHost}/${resultImageName}:${context.git.branch}-${context.codebase.buildVersion}"
         def jsonData = JsonOutput.toJson(parsedKanikoTemplateData)
         kanikoTemplateFilePath.write(jsonData, null)
         return kanikoTemplateFilePath
     }
 
-    def getDockerRegistryInfo() {
-        def dockerRegistry = [:]
+    def getAwsRegion() {
         try {
             def response = script.httpRequest timeout: 10, url: 'http://169.254.169.254/latest/dynamic/instance-identity/document'
             def parsedMetadata = new JsonSlurperClassic().parseText(response.content)
-            dockerRegistry.accountId = "${parsedMetadata.accountId}"
-            dockerRegistry.region = parsedMetadata.region
-            return dockerRegistry
+            return parsedMetadata.region
         }
         catch (Exception ex) {
             return null
@@ -106,12 +103,12 @@ class BuildImageKaniko {
         def resultImageName = "${context.codebase.name}-${context.git.branch.replaceAll("[^\\p{L}\\p{Nd}]+", "-")}"
         def buildconfigName = "build-${resultImageName}-${script.BUILD_NUMBER}"
         script.dir("${context.workDir}") {
-            try {
-                def dockerRegistry = getDockerRegistryInfo()
-                if (!dockerRegistry)
+//            try {
+                def dockerRegistryHost = context.platform.getJsonPathValue("edpcomponent", "docker-registry", ".spec.url")
+                if (!dockerRegistryHost)
                     script.error("[JENKINS][ERROR] Couldn't get docker registry server")
 
-                def kanikoTemplateFilePath = setKanikoTemplate("${context.workDir}/kaniko-template.json", buildconfigName, resultImageName, dockerRegistry, context)
+                def kanikoTemplateFilePath = setKanikoTemplate("${context.workDir}/kaniko-template.json", buildconfigName, resultImageName, dockerRegistryHost, context)
                 context.platform.apply(kanikoTemplateFilePath.getRemote())
                 while (!context.platform.getObjectStatus("pod", buildconfigName)["initContainerStatuses"][0].state.keySet().contains("running")) {
                     script.println("[JENKINS][DEBUG] Waiting for init container in Kaniko is started")
@@ -134,16 +131,16 @@ class BuildImageKaniko {
 
                 script.println("[JENKINS][DEBUG] Build config ${buildconfigName} for application ${context.codebase.name} has been completed")
 
-                updateCodebaseimagestreams(resultImageName, "${dockerRegistry.host}/${resultImageName}",
+                updateCodebaseimagestreams(resultImageName, "${dockerRegistryHost}/${resultImageName}",
                         "${context.git.branch}-${context.codebase.buildVersion}", context)
-            }
-            catch (Exception ex) {
-                script.error("[JENKINS][ERROR] Building image for ${context.codebase.name} failed")
-            }
-            finally {
-                def podToDelete = "build-${context.codebase.name}-${context.git.branch.replaceAll("[^\\p{L}\\p{Nd}]+", "-")}-${script.BUILD_NUMBER.toInteger() - 1}"
-                context.platform.deleteObject("pod", podToDelete, true)
-            }
+//            }
+//            catch (Exception ex) {
+//                script.error("[JENKINS][ERROR] Building image for ${context.codebase.name} failed")
+//            }
+//            finally {
+//                def podToDelete = "build-${context.codebase.name}-${context.git.branch.replaceAll("[^\\p{L}\\p{Nd}]+", "-")}-${script.BUILD_NUMBER.toInteger() - 1}"
+//                context.platform.deleteObject("pod", podToDelete, true)
+//            }
         }
     }
 }
