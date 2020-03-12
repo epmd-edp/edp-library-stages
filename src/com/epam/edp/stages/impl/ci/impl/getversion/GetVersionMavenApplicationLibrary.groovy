@@ -30,8 +30,9 @@ class GetVersionMavenApplicationLibrary {
             else
                sed -i "0,/<version>.*<\\\\/version>/s/<version>.*<\\\\/version>/<version>${context.codebase.branchVersion}<\\\\/version>/" pom.xml
             fi
-            kubectl patch codebasebranches.v2.edp.epam.com ${context.codebase.config.name}-${context.git.branch.replaceAll(/\//, "-")} --type=merge -p '{\"spec\": {\"build\": "${context.codebase.currentBuildNumber}"}}'
-        """
+            kubectl get codebasebranches.v2.edp.epam.com ${context.codebase.config.name}-${context.git.branch} -o yaml
+            kubectl patch codebasebranches.v2.edp.epam.com ${context.codebase.config.name}-${context.git.branch} --type=merge -p '{\"spec\": {\"build\": "${newBuildNumber}"}}'
+            kubectl get codebasebranches.v2.edp.epam.com ${context.codebase.config.name}-${context.git.branch} -o yaml        """
     }
 
     void run(context) {
