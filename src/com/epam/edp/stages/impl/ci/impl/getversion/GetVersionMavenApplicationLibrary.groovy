@@ -59,7 +59,12 @@ class GetVersionMavenApplicationLibrary {
                     script: "cat pom.xml | grep -Poh '<deployable.module>\\K[^<]*' || echo \"\"",
                     returnStdout: true
             ).trim()
-            context.job.setDisplayName("${script.currentBuild.number}-${context.git.branch}-${context.codebase.version}")
+            context.job.setDisplayName("11111111111111111111111")
+            script.println("-----------------------------------------")
+            script.println("${script.currentBuild.number}")
+            script.println("${context.git.branch}")
+            script.println("${context.codebase.version}")
+//            context.job.setDisplayName("${script.currentBuild.number}-${context.git.branch}-${context.codebase.version}")
             script.println("[JENKINS][DEBUG] Deployable module: ${context.codebase.deployableModule}")
             context.codebase.deployableModuleDir = context.codebase.deployableModule.isEmpty() ? "${context.workDir}/target" :
                     "${context.workDir}/${context.codebase.deployableModule}/target"
