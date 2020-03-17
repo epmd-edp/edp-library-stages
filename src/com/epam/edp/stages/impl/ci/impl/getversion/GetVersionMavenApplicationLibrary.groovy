@@ -52,7 +52,7 @@ class GetVersionMavenApplicationLibrary {
                         """,
                             returnStdout: true
                     ).trim().toLowerCase()
-                    context.codebase.buildVersion = "${context.codebase.version}-${script.BUILD_NUMBER}"
+                    context.codebase.buildVersion = "${context.codebase.version}.${script.BUILD_NUMBER}"
                  }
             }
             context.codebase.deployableModule = script.sh(

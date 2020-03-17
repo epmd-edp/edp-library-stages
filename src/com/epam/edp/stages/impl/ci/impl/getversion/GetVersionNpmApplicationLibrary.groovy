@@ -47,7 +47,7 @@ class GetVersionNpmApplicationLibrary {
                         node -p "require('./package.json').version"
                     """, returnStdout: true
                     ).trim().toLowerCase()
-                context.codebase.buildVersion = "${context.codebase.version}-${script.BUILD_NUMBER}"
+                context.codebase.buildVersion = "${context.codebase.version}.${script.BUILD_NUMBER}"
             }
         }
         context.job.setDisplayName("${script.currentBuild.number}-${context.git.branch}-${context.codebase.version}")

@@ -51,11 +51,11 @@ class GetVersionGradleApplicationLibrary {
                         """,
                             returnStdout: true
                     ).trim().toLowerCase()
-                    context.codebase.buildVersion = "${context.codebase.version}-${script.BUILD_NUMBER}"
+                    context.codebase.buildVersion = "${context.codebase.version}.${script.BUILD_NUMBER}"
                  }
             }
             context.job.setDisplayName("${script.currentBuild.number}-${context.git.branch}-${context.codebase.version}")
-            context.codebase.buildVersion = "${context.codebase.version}-${script.BUILD_NUMBER}"
+            context.codebase.buildVersion = "${context.codebase.version}.${script.BUILD_NUMBER}"
             context.codebase.deployableModuleDir = "${context.workDir}/build/libs"
         }
         script.println("[JENKINS][DEBUG] Artifact version - ${context.codebase.version}")
