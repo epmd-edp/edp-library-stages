@@ -25,7 +25,7 @@ class GetVersionMavenApplicationLibrary {
        def newBuildNumber = ++buildNumber
        script.sh """
             set -eo pipefail
-            sed -i "0,/<version>.*<\\/version>/s/<version>.*<\\/version>/<version>${branchVersion}-${newBuildNumber}<\\/version>/" pom.xml
+            sed -i "0,/<version>.*<\\/version>/s/<version>.*<\\/version>/<version>${branchVersion}.${newBuildNumber}<\\/version>/" pom.xml
             kubectl patch codebasebranches.v2.edp.epam.com ${context.codebase.config.name}-${context.git.branch} --type=merge -p '{\"spec\": {\"build\": "${newBuildNumber}"}}'
         """
 
@@ -52,7 +52,7 @@ class GetVersionMavenApplicationLibrary {
                         """,
                             returnStdout: true
                     ).trim().toLowerCase()
-                    context.codebase.buildVersion = "${context.codebase.version}-${script.BUILD_NUMBER}"
+                    context.codebase.buildVersion = "${context.codebase.version}.${script.BUILD_NUMBER}"
                  }
             }
             context.codebase.deployableModule = script.sh(
