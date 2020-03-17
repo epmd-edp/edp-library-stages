@@ -33,7 +33,7 @@ class GitTagApplicationLibrary {
                 ssh-keyscan -p ${context.git.sshPort} ${context.git.host} >> ~/.ssh/known_hosts
                 git config --global user.email ${context.git.autouser}@epam.com
                 git config --global user.name ${context.git.autouser}
-                git tag -a ${context.git.branch}-${context.codebase.buildVersion} -m 'Tag is added automatically by \
+                git tag -a build/${context.codebase.buildVersion} -m 'Tag is added automatically by \
                      ${context.git.autouser} user'
                 git push --tags"""
             }
