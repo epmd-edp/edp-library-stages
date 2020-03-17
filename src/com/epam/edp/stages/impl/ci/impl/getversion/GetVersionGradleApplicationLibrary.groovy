@@ -25,11 +25,11 @@ class GetVersionGradleApplicationLibrary {
        def newBuildNumber = ++buildNumber
        script.sh """
              set -eo pipefail
-             sed -i "s/version = ".*"/version = \\'${branchVersion}-${newBuildNumber}\\'/" build.gradle
+             sed -i "s/version = ".*"/version = \\'${branchVersion}.${newBuildNumber}\\'/" build.gradle
              kubectl patch codebasebranches.v2.edp.epam.com ${context.codebase.config.name}-${context.git.branch} --type=merge -p '{\"spec\": {\"build\": "${newBuildNumber}"}}'
         """
 
-       return "${branchVersion}-${newBuildNumber}"
+       return "${branchVersion}.${newBuildNumber}"
     }
 
     void run(context) {
@@ -55,7 +55,7 @@ class GetVersionGradleApplicationLibrary {
                  }
             }
             context.job.setDisplayName("${script.currentBuild.number}-${context.git.branch}-${context.codebase.version}")
-            context.codebase.buildVersion = "${context.codebase.version}-${script.BUILD_NUMBER}"
+            context.codebase.buildVersion = "${context.codebase.version}.${script.BUILD_NUMBER}"
             context.codebase.deployableModuleDir = "${context.workDir}/build/libs"
         }
         script.println("[JENKINS][DEBUG] Artifact version - ${context.codebase.version}")

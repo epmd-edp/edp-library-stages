@@ -25,11 +25,11 @@ class GetVersionDotnetApplicationLibrary {
        def newBuildNumber = ++buildNumber
        script.sh """
             set -eo pipefail
-            sed -i "s#\\(<Version>\\).*\\(</Version>\\)#\\1${branchVersion}-${newBuildNumber}\\2#" "${context.codebase.deployableModule}/${context.codebase.deployableModule}.csproj"
+            sed -i "s#\\(<Version>\\).*\\(</Version>\\)#\\1${branchVersion}.${newBuildNumber}\\2#" "${context.codebase.deployableModule}/${context.codebase.deployableModule}.csproj"
             kubectl patch codebasebranches.v2.edp.epam.com ${context.codebase.config.name}-${context.git.branch} --type=merge -p '{\"spec\": {\"build\": "${newBuildNumber}"}}'
         """
 
-       return "${branchVersion}-${newBuildNumber}"
+       return "${branchVersion}.${newBuildNumber}"
     }
 
     void run(context) {
