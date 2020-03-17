@@ -54,7 +54,7 @@ class GetVersionDotnetApplicationLibrary {
                 context.codebase.buildVersion = "${context.codebase.version}-${script.BUILD_NUMBER}"
              }
 
-            context.job.setDisplayName("${script.currentBuild.number}-${context.git.branch}-${context.codebase.version}")
+            context.job.setDisplayName("${context.codebase.version}.${script.currentBuild.number}")
             script.println("[JENKINS][DEBUG] Deployable module: ${context.codebase.deployableModule}")
             context.codebase.deployableModuleDir = "${context.workDir}"
         }
