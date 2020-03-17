@@ -25,11 +25,11 @@ class GetVersionNpmApplicationLibrary {
        def newBuildNumber = ++buildNumber
        script.sh """
             set -eo pipefail
-            sed -i "/version/c\\  \\"version\\": \\"${branchVersion}-${newBuildNumber}\\"," package.json
+            sed -i "/version/c\\  \\"version\\": \\"${branchVersion}.${newBuildNumber}\\"," package.json
             kubectl patch codebasebranches.v2.edp.epam.com ${context.codebase.config.name}-${context.git.branch} --type=merge -p '{\"spec\": {\"build\": "${newBuildNumber}"}}'
         """
 
-       return "${branchVersion}-${newBuildNumber}"
+       return "${branchVersion}.${newBuildNumber}"
     }
 
     void run(context) {
@@ -47,7 +47,7 @@ class GetVersionNpmApplicationLibrary {
                         node -p "require('./package.json').version"
                     """, returnStdout: true
                     ).trim().toLowerCase()
-                context.codebase.buildVersion = "${context.codebase.version}-${script.BUILD_NUMBER}"
+                context.codebase.buildVersion = "${context.codebase.version}.${script.BUILD_NUMBER}"
             }
         }
         context.job.setDisplayName("${script.currentBuild.number}-${context.git.branch}-${context.codebase.version}")
