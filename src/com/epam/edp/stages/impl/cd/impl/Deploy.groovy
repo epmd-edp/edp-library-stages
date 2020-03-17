@@ -145,11 +145,11 @@ class Deploy {
         def gitCodebaseUrl = "ssh://${autouser}@${host}:${sshPort}${repoPath}"
 
         try {
-            script.checkout([$class                           : 'GitSCM', branches: [[name: "refs/tags/${codebase.version}"]],
+            script.checkout([$class                           : 'GitSCM', branches: [[name: "refs/tags/build/${codebase.version}"]],
                              doGenerateSubmoduleConfigurations: false, extensions: [],
                              submoduleCfg                     : [],
                              userRemoteConfigs                : [[credentialsId: "${credentialsId}",
-                                                                  refspec      : "refs/tags/${codebase.version}",
+                                                                  refspec      : "refs/tags/build/${codebase.version}",
                                                                   url          : "${gitCodebaseUrl}"]]])
         }
         catch (Exception ex) {
