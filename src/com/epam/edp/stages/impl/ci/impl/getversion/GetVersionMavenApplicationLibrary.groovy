@@ -26,9 +26,7 @@ class GetVersionMavenApplicationLibrary {
        script.sh """
             set -eo pipefail
             sed -i "0,/<version>.*<\\/version>/s/<version>.*<\\/version>/<version>${branchVersion}-${newBuildNumber}<\\/version>/" pom.xml
-            kubectl get codebasebranches.v2.edp.epam.com ${context.codebase.config.name}-${context.git.branch} -o yaml
             kubectl patch codebasebranches.v2.edp.epam.com ${context.codebase.config.name}-${context.git.branch} --type=merge -p '{\"spec\": {\"build\": "${newBuildNumber}"}}'
-            kubectl get codebasebranches.v2.edp.epam.com ${context.codebase.config.name}-${context.git.branch} -o yaml
         """
 
        return "${branchVersion}-${newBuildNumber}"
