@@ -52,7 +52,7 @@ class TestsMavenAutotest {
                 script.error "[JENKINS][ERROR] Tests have been failed with error - ${ex}"
             }
             finally {
-                switch (context.codebase.config.testreportframework.toLowerCase()) {
+                switch (context.codebase.config.testReportFramework.toLowerCase()) {
                     case "allure":
                         script.allure([
                                 includeProperties: false,
