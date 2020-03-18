@@ -43,6 +43,7 @@ class TestsMavenAutotest {
                 script.withCredentials([script.usernamePassword(credentialsId: "${context.nexus.credentialsId}",
                         passwordVariable: 'PASSWORD', usernameVariable: 'USERNAME')]) {
                     script.sh "${parsedRunCommandJson.codereview} -Dartifactory.username=${script.USERNAME} -Dartifactory.password=${script.PASSWORD} " +
+                            "-Dartifactory.basePath=${context.nexus.basePath} " +
                             "-B --settings ${context.buildTool.settings}"
                 }
             }
