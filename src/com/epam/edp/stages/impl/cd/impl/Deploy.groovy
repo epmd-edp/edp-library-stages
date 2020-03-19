@@ -123,7 +123,8 @@ class Deploy {
 
     def cloneProject(context, codebase) {
         script.println("[JENKINS][DEBUG] Start fetching Git Server info for ${codebase.name} from ${codebase.gitServer} CR")
-
+        script.println("[JENKINS][DEBUG] My output1: ${context}")
+        script.println("[JENKINS][DEBUG] My output2: ${codebase}")
         def gitServerName = "gitservers.${context.job.crApiVersion}.edp.epam.com"
 
         script.println("[JENKINS][DEBUG] Git Server CR Version: ${context.job.crApiVersion}")
@@ -143,14 +144,24 @@ class Deploy {
         script.println("[JENKINS][DEBUG] Repository path: ${repoPath}")
 
         def gitCodebaseUrl = "ssh://${autouser}@${host}:${sshPort}${repoPath}"
+        def prefix = "build"
 
         try {
-            script.checkout([$class                           : 'GitSCM', branches: [[name: "refs/tags/${codebase.version}"]],
-                             doGenerateSubmoduleConfigurations: false, extensions: [],
-                             submoduleCfg                     : [],
-                             userRemoteConfigs                : [[credentialsId: "${credentialsId}",
-                                                                  refspec      : "refs/tags/${codebase.version}",
-                                                                  url          : "${gitCodebaseUrl}"]]])
+            if (codebase.versioningType == "edp") {
+                script.checkout([$class                           : 'GitSCM', branches: [[name: "refs/tags/${prefix}/${codebase.branch}/${codebase.version}"]],
+                                 doGenerateSubmoduleConfigurations: false, extensions: [],
+                                 submoduleCfg                     : [],
+                                 userRemoteConfigs                : [[credentialsId: "${credentialsId}",
+                                                                      refspec      : "refs/tags/${prefix}/${codebase.version}",
+                                                                      url          : "${gitCodebaseUrl}"]]])
+            } else {
+                script.checkout([$class                           : 'GitSCM', branches: [[name: "refs/tags/${prefix}/${codebase.version}"]],
+                                 doGenerateSubmoduleConfigurations: false, extensions: [],
+                                 submoduleCfg                     : [],
+                                 userRemoteConfigs                : [[credentialsId: "${credentialsId}",
+                                                                      refspec      : "refs/tags/${prefix}/${codebase.version}",
+                                                                      url          : "${gitCodebaseUrl}"]]])
+            }
         }
         catch (Exception ex) {
             script.unstable("[JENKINS][WARNING] Project ${codebase.name} cloning has failed with ${ex}\r\n" +
