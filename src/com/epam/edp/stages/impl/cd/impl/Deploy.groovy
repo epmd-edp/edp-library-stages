@@ -143,13 +143,14 @@ class Deploy {
         script.println("[JENKINS][DEBUG] Repository path: ${repoPath}")
 
         def gitCodebaseUrl = "ssh://${autouser}@${host}:${sshPort}${repoPath}"
+        def prefix = "build"
 
         try {
-            script.checkout([$class                           : 'GitSCM', branches: [[name: "refs/tags/${codebase.version}"]],
+            script.checkout([$class                           : 'GitSCM', branches: [[name: "refs/tags/${prefix}/${codebase.version}"]],
                              doGenerateSubmoduleConfigurations: false, extensions: [],
                              submoduleCfg                     : [],
                              userRemoteConfigs                : [[credentialsId: "${credentialsId}",
-                                                                  refspec      : "refs/tags/${codebase.version}",
+                                                                  refspec      : "refs/tags/${prefix}/${codebase.version}",
                                                                   url          : "${gitCodebaseUrl}"]]])
         }
         catch (Exception ex) {
