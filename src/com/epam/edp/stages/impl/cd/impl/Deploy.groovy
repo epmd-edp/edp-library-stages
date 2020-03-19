@@ -145,12 +145,22 @@ class Deploy {
         def gitCodebaseUrl = "ssh://${autouser}@${host}:${sshPort}${repoPath}"
 
         try {
-            script.checkout([$class                           : 'GitSCM', branches: [[name: "refs/tags/${codebase.version}"]],
-                             doGenerateSubmoduleConfigurations: false, extensions: [],
-                             submoduleCfg                     : [],
-                             userRemoteConfigs                : [[credentialsId: "${credentialsId}",
-                                                                  refspec      : "refs/tags/${codebase.version}",
-                                                                  url          : "${gitCodebaseUrl}"]]])
+            def prefix = "build"
+            if (context.codebase.config.versioningType == "edp") {
+                script.checkout([$class                           : 'GitSCM', branches: [[name: "refs/tags/${prefix}/${codebase.version}"]],
+                                 doGenerateSubmoduleConfigurations: false, extensions: [],
+                                 submoduleCfg                     : [],
+                                 userRemoteConfigs                : [[credentialsId: "${credentialsId}",
+                                                                      refspec      : "refs/tags/${prefix}/${codebase.version}",
+                                                                      url          : "${gitCodebaseUrl}"]]])
+            } else {
+                script.checkout([$class                           : 'GitSCM', branches: [[name: "refs/tags/${codebase.version}"]],
+                                 doGenerateSubmoduleConfigurations: false, extensions: [],
+                                 submoduleCfg                     : [],
+                                 userRemoteConfigs                : [[credentialsId: "${credentialsId}",
+                                                                      refspec      : "refs/tags/${codebase.version}",
+                                                                      url          : "${gitCodebaseUrl}"]]])
+            }
         }
         catch (Exception ex) {
             script.unstable("[JENKINS][WARNING] Project ${codebase.name} cloning has failed with ${ex}\r\n" +
