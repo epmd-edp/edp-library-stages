@@ -122,6 +122,7 @@ class Deploy {
     }
 
     def cloneProject(context, codebase) {
+        script.println("[JENKINS][DEBUG] Repository path: ${context.codebase.versioningType}")
         script.println("[JENKINS][DEBUG] Start fetching Git Server info for ${codebase.name} from ${codebase.gitServer} CR")
 
         def gitServerName = "gitservers.${context.job.crApiVersion}.edp.epam.com"
@@ -143,15 +144,17 @@ class Deploy {
         script.println("[JENKINS][DEBUG] Repository path: ${repoPath}")
 
         def gitCodebaseUrl = "ssh://${autouser}@${host}:${sshPort}${repoPath}"
+        def prefix = "build"
 
         try {
-            script.checkout([$class                           : 'GitSCM', branches: [[name: "refs/tags/${codebase.version}"]],
+            script.checkout([$class                           : 'GitSCM', branches: [[name: "refs/tags/${prefix}/${codebase.version}"]],
                              doGenerateSubmoduleConfigurations: false, extensions: [],
                              submoduleCfg                     : [],
                              userRemoteConfigs                : [[credentialsId: "${credentialsId}",
-                                                                  refspec      : "refs/tags/${codebase.version}",
-                                                                  url          : "${gitCodebaseUrl}"]]])
+                                                                      refspec      : "refs/tags/${prefix}/${codebase.version}",
+                                                                      url          : "${gitCodebaseUrl}"]]])
         }
+
         catch (Exception ex) {
             script.unstable("[JENKINS][WARNING] Project ${codebase.name} cloning has failed with ${ex}\r\n" +
                     "[JENKINS][WARNING] Deploy will be skipped\r\n" +
