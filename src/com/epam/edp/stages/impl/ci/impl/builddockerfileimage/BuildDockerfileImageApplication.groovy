@@ -45,7 +45,7 @@ class BuildDockerfileImageApplication {
                         "${buildconfigName}:${resultTag} has been completed")
 
                 script.openshift.tag("${script.openshift.project()}/${outputImagestreamName}@${resultTag}",
-                        "${script.openshift.project()}/${outputImagestreamName}:${context.git.branch}-${context.codebase.buildVersion}")
+                        "${script.openshift.project()}/${outputImagestreamName}:${context.codebase.buildVersion}")
             }
         }
     }
