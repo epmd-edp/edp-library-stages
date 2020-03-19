@@ -42,7 +42,7 @@ class BuildImageApplication {
 
                 script.openshift.tag(
                         "${script.openshift.project()}/${buildconfigName}@${resultTag}",
-                        "${script.openshift.project()}/${buildconfigName}:${context.git.branch}-${context.codebase.buildVersion}"
+                        "${script.openshift.project()}/${buildconfigName}:${context.codebase.buildVersion}"
                 )
             }
         }
