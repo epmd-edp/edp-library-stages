@@ -26,6 +26,8 @@ class CreateBranch {
             script.withCredentials([script.sshUserPrivateKey(credentialsId: "${context.git.credentialsId}",
                     keyFileVariable: 'key', passphraseVariable: '', usernameVariable: 'git_user')]) {
                 try {
+                    script.println("[JENKINS][DEBUG] CREATING RELEASE JOB ${context}")
+                    script.println("[JENKINS][DEBUG] CREATING RELEASE JOB ${context.codebase}")
                     script.sh """
                 eval `ssh-agent`
                 ssh-add ${script.key}
