@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "31b64599_b7b79cbb",
+        "filename": "src/com/epam/edp/stages/impl/cd/impl/Deploy.groovy",
+        "patchSetId": 45
+      },
+      "lineNbr": 131,
+      "author": {
+        "id": 1000017
+      },
+      "writtenOn": "2020-03-20T16:17:48Z",
+      "side": 1,
+      "message": "use return",
+      "range": {
+        "startLine": 124,
+        "startChar": 4,
+        "endLine": 131,
+        "endChar": 5
+      },
+      "revId": "f02351bbd1b02cb30f7054bd2d580c62e392999f",
+      "serverId": "0350cb7f-c1b1-4710-a647-f6632dbafb3c",
+      "unresolved": false
+    }
+  ]
+}
