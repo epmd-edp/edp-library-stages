@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7e899662_9f821291",
+        "filename": "src/com/epam/edp/stages/impl/cd/impl/Deploy.groovy",
+        "patchSetId": 39
+      },
+      "lineNbr": 162,
+      "author": {
+        "id": 1000017
+      },
+      "writtenOn": "2020-03-20T13:43:21Z",
+      "side": 1,
+      "message": "create function for generating refspec and make decision there",
+      "range": {
+        "startLine": 148,
+        "startChar": 12,
+        "endLine": 162,
+        "endChar": 13
+      },
+      "revId": "211a517051a7a24ef84ae2c4138951ca7b3001bf",
+      "serverId": "0350cb7f-c1b1-4710-a647-f6632dbafb3c",
+      "unresolved": false
+    }
+  ]
+}
