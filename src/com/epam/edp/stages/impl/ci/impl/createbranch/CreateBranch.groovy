@@ -21,11 +21,18 @@ import com.epam.edp.stages.impl.ci.Stage
 class CreateBranch {
     Script script
 
+    def processBranchName(context) {
+        return context.job.release
+    }
+
     void run(context) {
         script.dir("${context.workDir}") {
             script.withCredentials([script.sshUserPrivateKey(credentialsId: "${context.git.credentialsId}",
                     keyFileVariable: 'key', passphraseVariable: '', usernameVariable: 'git_user')]) {
                 try {
+                    script.println("[JENKINS][DEBUG] CREATING RELEASE JOB ${context}")
+                    def a = processBranchName(context)
+                    script.println("[JENKINS][DEBUG] CREATING RELEASE JOB ${a}")
                     script.sh """
                 eval `ssh-agent`
                 ssh-add ${script.key}
