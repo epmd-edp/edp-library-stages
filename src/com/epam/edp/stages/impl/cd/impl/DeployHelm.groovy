@@ -210,6 +210,7 @@ class DeployHelm {
             deployConfigMaps(codebaseDir, name, context)
             try {
                 deployCodebaseTemplate(context, codebase, deployTemplatesPath)
+                script.println("[JENKINS][WARNING] ${deployCodebaseTemplate(context, codebase, deployTemplatesPath)})
             }
             catch (Exception ex) {
                 script.println("[JENKINS][WARNING] Deployment of codebase ${name} has been failed. Reason - ${ex}.")
