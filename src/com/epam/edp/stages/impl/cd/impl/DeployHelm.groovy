@@ -181,7 +181,7 @@ class DeployHelm {
         codebase.cdPipelineName = context.job.pipelineName
         codebase.cdPipelineStageName = context.job.stageName
 
-        def imageName = codebase.inputIs ? codebase.inputIs : codebase.normalizedName
+        def  = codebase.inputIs ? codebase.inputIs : codebase.normalizedName
         context.platform.deployCodebase(
                 context.job.deployProject,
                 "${deployTemplatesPath}",
@@ -210,6 +210,7 @@ class DeployHelm {
             deployConfigMaps(codebaseDir, name, context)
             try {
                 deployCodebaseTemplate(context, codebase, deployTemplatesPath)
+                script.println("[JENKINS][WARNING] $"{deployCodebaseTemplate(context, codebase, deployTemplatesPath})"")
             }
             catch (Exception ex) {
                 script.println("[JENKINS][WARNING] Deployment of codebase ${name} has been failed. Reason - ${ex}.")
