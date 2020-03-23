@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a75fe28e_3daadde1",
+        "filename": "src/com/epam/edp/stages/impl/ci/impl/createbranch/CreateBranch.groovy",
+        "patchSetId": 4
+      },
+      "lineNbr": 24,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2020-03-23T09:03:02Z",
+      "side": 1,
+      "message": "Can we introduce separate param for git branch name?",
+      "range": {
+        "startLine": 24,
+        "startChar": 8,
+        "endLine": 24,
+        "endChar": 34
+      },
+      "revId": "45365d99ba7a8e9e5bd33615f47e8770f386ca67",
+      "serverId": "0350cb7f-c1b1-4710-a647-f6632dbafb3c",
+      "unresolved": false
+    }
+  ]
+}
