@@ -187,7 +187,7 @@ class DeployHelm {
                 "${deployTemplatesPath}",
                 "${context.environment.config.dockerRegistryHost}/${imageName}",
                 codebase, context.job.dnsWildcard,
-                "300",
+                "300s",
                 context.platform.verifyDeployedCodebase(codebase.name, context.job.deployProject)
         )
     }
