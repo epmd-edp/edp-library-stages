@@ -143,11 +143,12 @@ class DeployHelm {
         def gitCodebaseUrl = "ssh://${autouser}@${host}:${sshPort}${repoPath}"
 
         try {
-            script.checkout([$class                           : 'GitSCM', branches: [[name: "refs/tags/${codebase.version}"]],
+            def refspec = getRefspec(codebase)
+            script.checkout([$class                           : 'GitSCM', branches: [[name: "refs/tags/${codebase.version"]],
                              doGenerateSubmoduleConfigurations: false, extensions: [],
                              submoduleCfg                     : [],
                              userRemoteConfigs                : [[credentialsId: "${credentialsId}",
-                                                                  refspec      : "refs/tags/${codebase.version}",
+                                                                  refspec      : "refs/tags/${codebase.version",
                                                                   url          : "${gitCodebaseUrl}"]]])
         }
         catch (Exception ex) {
@@ -187,7 +188,7 @@ class DeployHelm {
                 "${deployTemplatesPath}",
                 "${context.environment.config.dockerRegistryHost}/${imageName}",
                 codebase, context.job.dnsWildcard,
-                "300",
+                "300s",
                 context.platform.verifyDeployedCodebase(codebase.name, context.job.deployProject)
         )
     }
