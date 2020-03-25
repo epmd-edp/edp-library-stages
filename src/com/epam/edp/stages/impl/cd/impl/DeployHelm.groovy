@@ -119,6 +119,12 @@ class DeployHelm {
         return "/" + codebase.name
     }
 
+    def getRefspec(codebase) {
+        return codebase.versioningType == "edp" ?
+            "refs/tags/build/${codebase.version}" :
+            "refs/tags/build/${codebase.version}"
+    }
+
     def cloneProject(context, codebase) {
         script.println("[JENKINS][DEBUG] Start fetching Git Server info for ${codebase.name} from ${codebase.gitServer} CR")
 
@@ -143,17 +149,20 @@ class DeployHelm {
         def gitCodebaseUrl = "ssh://${autouser}@${host}:${sshPort}${repoPath}"
 
         try {
-            script.checkout([$class                           : 'GitSCM', branches: [[name: "refs/tags/${codebase.version}"]],
+            def refspec = getRefspec(codebase)
+            script.checkout([$class                           : 'GitSCM', branches: [[name: "${refspec}"]],
                              doGenerateSubmoduleConfigurations: false, extensions: [],
                              submoduleCfg                     : [],
                              userRemoteConfigs                : [[credentialsId: "${credentialsId}",
-                                                                  refspec      : "refs/tags/${codebase.version}",
+                                                                  refspec      : "${refspec}",
                                                                   url          : "${gitCodebaseUrl}"]]])
         }
         catch (Exception ex) {
+            def refspec = getRefspec(codebase)
             script.println("[JENKINS][WARNING] Project ${codebase.name} cloning has failed with ${ex}\r\n" +
                     "[JENKINS][WARNING] Deploy will be skipped\r\n" +
-                    "[JENKINS][WARNING] Check if tag ${codebase.version} exists in repository")
+                    "[JENKINS][WARNING] Check if tag ${codebase.version} exists in repository\r\n" +
+                    "[JENKINS][WARNING] Detected error ${refspec}")
             script.currentBuild.result = 'UNSTABLE'
             script.currentBuild.description = "${script.currentBuild.description}\r\n${codebase.name} deploy failed"
             return false
@@ -187,7 +196,7 @@ class DeployHelm {
                 "${deployTemplatesPath}",
                 "${context.environment.config.dockerRegistryHost}/${imageName}",
                 codebase, context.job.dnsWildcard,
-                "300",
+                "300s",
                 context.platform.verifyDeployedCodebase(codebase.name, context.job.deployProject)
         )
     }
