@@ -48,7 +48,7 @@ class BuildImageKaniko {
             parsedKanikoTemplateData.spec.containers[0].args[0] = "--destination=${dockerRegistryHost}/${resultImageName}:${context.codebase.buildVersion}"
         } else {
             parsedKanikoTemplateData.spec.containers[0].args[0] = "--destination=${dockerRegistryHost}/${resultImageName}:${context.git.branch}-${context.codebase.buildVersion}"
-          }
+        }
         def jsonData = JsonOutput.toJson(parsedKanikoTemplateData)
         kanikoTemplateFilePath.write(jsonData, null)
         return kanikoTemplateFilePath
@@ -80,7 +80,7 @@ class BuildImageKaniko {
     def updateCodebaseimagestreams(cbisName, repositoryName, imageTag, context) {
         def crApiGroup = "${context.job.getParameterValue("GIT_SERVER_CR_VERSION")}.edp.epam.com"
         if (!context.platform.checkObjectExists("cbis.${crApiGroup}", cbisName)) {
-            script.println("[JENKINS][DEBUG] CodebaseImagestream not found. Creating new CodebaseImagestream")
+            script.println("[JENKINS][DEBUG] Codebase Imagestream not found. Creating new CodebaseImagestream")
             def cbisTemplateFilePath = setCodebaseImageStreamTemplate("${context.workDir}/cbis-template.json", cbisName, repositoryName, context)
             context.platform.apply(cbisTemplateFilePath.getRemote())
         }
@@ -138,7 +138,6 @@ class BuildImageKaniko {
                 }
 
                 script.println("[JENKINS][DEBUG] Build config ${buildconfigName} for application ${context.codebase.name} has been completed")
-
                 updateCodebaseimagestreams(resultImageName, "${dockerRegistryHost}/${resultImageName}",
                         "${context.git.branch}-${context.codebase.buildVersion}", context)
             }
