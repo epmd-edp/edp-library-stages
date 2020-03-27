@@ -36,6 +36,8 @@ class GetVersionMavenApplicationLibrary {
                     passwordVariable: 'PASSWORD', usernameVariable: 'USERNAME')]) {
                 if (context.codebase.config.versioningType == "edp") {
                     setVersionToArtifact(context)
+                    context.codebase.setVCStag("build/${context.codebase.version}-${script.BUILD_NUMBER}")
+                    println("[JENKINS][DEBUG] VCS tag - ${context.codebase.vcsTag}")
                 } else {
                     context.codebase.version = script.sh(
                             script: """
