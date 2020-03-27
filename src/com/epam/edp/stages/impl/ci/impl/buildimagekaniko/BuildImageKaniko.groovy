@@ -136,11 +136,13 @@ class BuildImageKaniko {
                     script.println("[JENKINS][DEBUG] Waiting for build ${buildconfigName}")
                     script.sleep(10)
                 }
-
                 script.println("[JENKINS][DEBUG] Build config ${buildconfigName} for application ${context.codebase.name} has been completed")
-
-                updateCodebaseimagestreams(resultImageName, "${dockerRegistryHost}/${resultImageName}",
-                        "${context.git.branch}-${context.codebase.buildVersion}", context)
+                    if (context.codebase.config.versioningType == "edp") {
+                        updateCodebaseimagestreams(resultImageName, "${dockerRegistryHost}/${resultImageName}",
+                            "${context.codebase.buildVersion}", context)
+                    } else {
+                        updateCodebaseimagestreams(resultImageName, "${dockerRegistryHost}/${resultImageName}",
+                            "${context.git.branch}-${context.codebase.buildVersion}", context)}
             }
             catch (Exception ex) {
                 script.error("[JENKINS][ERROR] Building image for ${context.codebase.name} failed")
