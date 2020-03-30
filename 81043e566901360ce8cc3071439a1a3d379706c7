@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9f90dd38_f9a3fd84",
+        "filename": "src/com/epam/edp/stages/impl/cd/impl/Deploy.groovy",
+        "patchSetId": 3
+      },
+      "lineNbr": 125,
+      "author": {
+        "id": 1000005
+      },
+      "writtenOn": "2020-03-30T09:37:51Z",
+      "side": 1,
+      "message": "get rid of using current conditions as we agreed",
+      "revId": "81043e566901360ce8cc3071439a1a3d379706c7",
+      "serverId": "0350cb7f-c1b1-4710-a647-f6632dbafb3c",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3393344a_f966e1bb",
+        "filename": "src/com/epam/edp/stages/impl/cd/impl/DeployHelm.groovy",
+        "patchSetId": 3
+      },
+      "lineNbr": 122,
+      "author": {
+        "id": 1000005
+      },
+      "writtenOn": "2020-03-30T09:37:51Z",
+      "side": 1,
+      "message": "the same",
+      "revId": "81043e566901360ce8cc3071439a1a3d379706c7",
+      "serverId": "0350cb7f-c1b1-4710-a647-f6632dbafb3c",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4858d266_e8190fc1",
+        "filename": "src/com/epam/edp/stages/impl/ci/impl/buildimagekaniko/BuildImageKaniko.groovy",
+        "patchSetId": 3
+      },
+      "lineNbr": 140,
+      "author": {
+        "id": 1000005
+      },
+      "writtenOn": "2020-03-30T09:37:51Z",
+      "side": 1,
+      "message": "the same",
+      "revId": "81043e566901360ce8cc3071439a1a3d379706c7",
+      "serverId": "0350cb7f-c1b1-4710-a647-f6632dbafb3c",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "dc83c83f_b96d81d7",
+        "filename": "src/com/epam/edp/stages/impl/ci/impl/gittag/GitTagApplicationLibrary.groovy",
+        "patchSetId": 3
+      },
+      "lineNbr": 29,
+      "author": {
+        "id": 1000005
+      },
+      "writtenOn": "2020-03-30T09:37:51Z",
+      "side": 1,
+      "message": "the same",
+      "revId": "81043e566901360ce8cc3071439a1a3d379706c7",
+      "serverId": "0350cb7f-c1b1-4710-a647-f6632dbafb3c",
+      "unresolved": false
+    }
+  ]
+}
