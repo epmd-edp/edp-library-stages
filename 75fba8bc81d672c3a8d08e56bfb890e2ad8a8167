@@ -1,0 +1,8 @@
+Code-Review+2: Anton Tarianyk <anton_tarianyk@epam.com>
+Code-Review+1: Stanislav Kostenko <stanislav_kostenko@epam.com>
+Verified+1: CI Jenkins
+Submitted-by: Stanislav Kostenko <stanislav_kostenko@epam.com>
+Submitted-at: Tue, 31 Mar 2020 14:43:48 +0000
+Reviewed-on: https://gerrit-oc-green-edp-cicd.delivery.aws.main.edp.projects.epam.com/c/edp-library-stages/+/705
+Project: edp-library-stages
+Branch: refs/heads/master
