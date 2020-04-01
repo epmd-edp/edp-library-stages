@@ -23,12 +23,11 @@ class PushMavenApplicationLibrary {
 
     void run(context) {
         script.dir("${context.workDir}") {
-            def nexusRepositoryUrl = context.codebase.version.toLowerCase().contains("snapshot") ?
-                    "${context.buildTool.hostedRepository}-snapshots" : "${context.buildTool.hostedRepository}-releases"
+            def url = context.buildTool.getNexusRepositoryUrl(!context.codebase.version.toLowerCase().contains("snapshot"))
             script.withCredentials([script.usernamePassword(credentialsId: "${context.nexus.credentialsId}",
                     passwordVariable: 'PASSWORD', usernameVariable: 'USERNAME')]) {
                 script.sh "${context.buildTool.command} ${context.buildTool.properties} -Dartifactory.username=${script.USERNAME} -Dartifactory.password=${script.PASSWORD}" +
-                        " deploy -B -DskipTests=true -DaltDeploymentRepository=nexus::default::${nexusRepositoryUrl}"
+                        " deploy -B -DskipTests=true -DaltDeploymentRepository=nexus::default::${url}"
             }
         }
     }
