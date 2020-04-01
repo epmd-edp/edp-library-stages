@@ -25,19 +25,20 @@ class PushNpmApplicationLibrary {
         script.dir("${context.workDir}") {
             script.withCredentials([script.usernamePassword(credentialsId: "${context.nexus.credentialsId}", passwordVariable: 'PASSWORD',
                     usernameVariable: 'USERNAME')]) {
+                def url = context.buildTool.getNexusRepositoryUrl(!context.codebase.version.contains("snapshot"))
                 def token = script.sh(script: """
         curl -s -H "Accept: application/json" -H "Content-Type:application/json" -X PUT --data \
         '{"name": "${script.USERNAME}", "password": "${script.PASSWORD}"}' \
-        ${context.buildTool.hostedRepository}-/user/org.couchdb.user:${script.USERNAME} | \
+        ${url}-/user/org.couchdb.user:${script.USERNAME} | \
         grep -oE 'NpmToken\\.[0-9a-zA-Z-]+'
         """,
                         returnStdout: true)
 
                 script.sh (script: """
             set +x
-            npm set registry ${context.buildTool.hostedRepository}
+            npm set registry ${url}
             auth=\$(echo -n '${script.USERNAME}:${script.PASSWORD}' | base64); npm set _auth=\$auth
-            npm set //${context.buildTool.hostedRepository}:_authToken ${token}
+            npm set //${url}:_authToken ${token}
             npm set email=${context.git.autouser}@epam.com
             """, returnStdout: false)
             }

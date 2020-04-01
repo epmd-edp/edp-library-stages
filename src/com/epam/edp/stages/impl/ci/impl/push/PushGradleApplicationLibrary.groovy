@@ -26,10 +26,9 @@ class PushGradleApplicationLibrary {
             script.dir("${context.workDir}") {
                 script.withCredentials([script.usernamePassword(credentialsId: "${context.nexus.credentialsId}",
                         passwordVariable: 'PASSWORD', usernameVariable: 'USERNAME')]) {
-                    def nexusRepositoryUrl = context.codebase.version.contains("snapshot") ?
-                            "${context.buildTool.hostedRepository}-snapshots" : "${context.buildTool.hostedRepository}-releases"
+                    def url = context.buildTool.getNexusRepositoryUrl(!context.codebase.version.contains("snapshot"))
                     script.sh "gradle publish -I ${context.buildTool.settings} -PnexusLogin=${script.USERNAME} " +
-                            "-PnexusPassword=${script.PASSWORD} -PnexusMavenRepositoryUrl=${nexusRepositoryUrl}"
+                            "-PnexusPassword=${script.PASSWORD} -PnexusMavenRepositoryUrl=${url}"
                 }
             }
         }

@@ -25,10 +25,10 @@ class PushDotnetApplicationLibrary {
 
         script.dir("${context.workDir}") {
             def nugetPackagesPath = "/tmp/${context.git.project}-nupkgs/"
-
+            def url = context.buildTool.getNexusRepositoryUrl(!context.codebase.version.contains("snapshot"))
             script.sh "dotnet pack ${context.buildTool.sln_filename} --no-build --output ${nugetPackagesPath}"
             script.sh "dotnet nuget push ${nugetPackagesPath} -k ${context.buildTool.nugetApiKey} " +
-                    "-s ${context.buildTool.hostedRepository}"
+                    "-s ${url}"
         }
     }
 }
