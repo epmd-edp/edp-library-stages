@@ -25,6 +25,7 @@ class GetVersionMavenApplicationLibrary {
     def setVersionToArtifact(context) {
         script.sh """
             set -eo pipefail
+<<<<<<< HEAD
             if ${context.codebase.isReleaseBranch}; then
                sed -i "0,/<version>.*<\\/version>/s/<version>.*<\\/version>/<version>${context.codebase.branchVersion}-${context.codebase.currentBuildNumber}<\\/version>/" pom.xml
             else
@@ -33,6 +34,11 @@ class GetVersionMavenApplicationLibrary {
             kubectl get codebasebranches.v2.edp.epam.com ${context.codebase.config.name}-${context.git.branch} -o yaml
             kubectl patch codebasebranches.v2.edp.epam.com ${context.codebase.config.name}-${context.git.branch} --type=merge -p '{\"spec\": {\"build\": "${newBuildNumber}"}}'
             kubectl get codebasebranches.v2.edp.epam.com ${context.codebase.config.name}-${context.git.branch} -o yaml        """
+=======
+            sed -i "0,/<version>.*<\\/version>/s/<version>.*<\\/version>/<version>${context.codebase.branchVersion}-${context.codebase.currentBuildNumber}<\\/version>/" pom.xml
+            kubectl patch codebasebranches.v2.edp.epam.com ${context.codebase.config.name}-${context.git.branch} --type=merge -p '{\"spec\": {\"build\": "${context.codebase.currentBuildNumber}"}}'
+        """
+>>>>>>> Verbose log
     }
 
     void run(context) {
