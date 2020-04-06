@@ -103,7 +103,7 @@ class BuildImageKaniko {
         def resultImageName = "${context.codebase.name}-${context.git.branch.replaceAll("[^\\p{L}\\p{Nd}]+", "-")}"
         def buildconfigName = "build-${resultImageName}-${script.BUILD_NUMBER}"
         script.dir("${context.workDir}") {
-            try {
+//            try {
                 def dockerRegistryHost = context.platform.getJsonPathValue("edpcomponent", "docker-registry", ".spec.url")
                 if (!dockerRegistryHost)
                     script.error("[JENKINS][ERROR] Couldn't get docker registry server")
@@ -115,14 +115,13 @@ class BuildImageKaniko {
                     script.sleep(5)
                 }
 
-                def deployableModuleDirFilepath = new FilePath(Jenkins.getInstance().getComputer(script.env['NODE_NAME']).getChannel(), context.codebase.deployableModuleDir)
-                script.println(context.codebase.deployableModuleDir)
+                def deployableModuleDirFilepath = new FilePath(Jenkins.getInstance().getComputer(script.env['NODE_NAME']).getChannel(), context.workDir)
                 script.println(deployableModuleDirFilepath)
                 script.println(deployableModuleDirFilepath.list())
                 deployableModuleDirFilepath.list().each() { item ->
                     if (item.getName() != "Dockerfile") {
                         script.println(item.getName())
-                        context.platform.copyToPod("${context.codebase.deployableModuleDir}/${item.getName()}", "/tmp/workspace/", buildconfigName, null, "init-kaniko")
+                        context.platform.copyToPod("${context.workDir}/${item.getName()}", "/tmp/workspace/", buildconfigName, null, "init-kaniko")
                     }
                 }
                 context.platform.copyToPod("Dockerfile", "/tmp/workspace", buildconfigName, null, "init-kaniko")
@@ -138,14 +137,14 @@ class BuildImageKaniko {
 
                 updateCodebaseimagestreams(resultImageName, "${dockerRegistryHost}/${resultImageName}",
                         "${context.git.branch}-${context.codebase.buildVersion}", context)
-            }
-            catch (Exception ex) {
-                script.error("[JENKINS][ERROR] Building image for ${context.codebase.name} failed")
-            }
-            finally {
-                def podToDelete = "build-${context.codebase.name}-${context.git.branch.replaceAll("[^\\p{L}\\p{Nd}]+", "-")}-${script.BUILD_NUMBER.toInteger() - 1}"
-                context.platform.deleteObject("pod", podToDelete, true)
-            }
+//            }
+//            catch (Exception ex) {
+//                script.error("[JENKINS][ERROR] Building image for ${context.codebase.name} failed")
+//            }
+//            finally {
+//                def podToDelete = "build-${context.codebase.name}-${context.git.branch.replaceAll("[^\\p{L}\\p{Nd}]+", "-")}-${script.BUILD_NUMBER.toInteger() - 1}"
+//                context.platform.deleteObject("pod", podToDelete, true)
+//            }
         }
     }
 }
