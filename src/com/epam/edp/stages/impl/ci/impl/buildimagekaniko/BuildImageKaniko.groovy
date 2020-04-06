@@ -115,9 +115,7 @@ class BuildImageKaniko {
                     script.sleep(5)
                 }
 
-                def deployableModuleDirFilepath = new FilePath(Jenkins.getInstance().getComputer(script.env['NODE_NAME']).getChannel(), context.codebase.deployableModuleDir)
-                script.println(context.codebase.deployableModuleDir)
-                script.println(deployableModuleDirFilepath)
+                def deployableModuleDirFilepath = new FilePath(Jenkins.getInstance().getComputer(script.env['NODE_NAME']).getChannel(), context.workDir)
                 script.println(deployableModuleDirFilepath.list())
                 deployableModuleDirFilepath.list().each() { item ->
                     if (item.getName() != "Dockerfile") {
