@@ -25,6 +25,8 @@ class SonarMaven {
 
     def getSonarReportJson(context, projectKey, sonarDir = "target/sonar", serviceBranch = 'master', sonarUrl = "https://sonar-epm-insr-edp-cicd.dev-test.epm-insr.projects.epam.com/") {
         String sonarAnalysisStatus
+        script.sh "ls -la ${context.workDir}/target/sonar/"
+        script.sh "cat  ${context.workDir}/target/sonar/report-task.txt"
         def sonarJsonReportLink = "${sonarUrl}/api/issues/search?componentKeys=${projectKey}&branch=${serviceBranch}&resolved=false&facets=severities"
         def sonarReportMap = readProperties file: "${sonarDir}/report-task.txt"
 
@@ -102,6 +104,7 @@ class SonarMaven {
             script.timeout(time: 10, unit: 'MINUTES') {
                 def qualityGateResult = script.waitForQualityGate()
                 if (qualityGateResult.status != 'OK')
+                    getSonarReportJson(context)
                     script.error "[JENKINS][ERROR] Sonar quality gate check has been failed with status " +
                             "${qualityGateResult.status}"
             }
