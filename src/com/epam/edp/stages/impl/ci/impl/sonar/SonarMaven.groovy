@@ -23,10 +23,12 @@ import org.apache.commons.lang.RandomStringUtils
 @Stage(name = "sonar", buildTool = ["maven"], type = [ProjectType.APPLICATION, ProjectType.AUTOTESTS, ProjectType.LIBRARY])
 class SonarMaven {
 
-    def getSonarReportJson(context, projectKey, sonarDir = "target/sonar", serviceBranch = 'master', sonarUrl = "https://sonar-epm-insr-edp-cicd.dev-test.epm-insr.projects.epam.com/") {
+    def getSonarReportJson(context, projectKey='petclinic', serviceBranch = 'master', sonarUrl = "https://sonar-oc-green-sk-dev-dev.delivery.aws.main.edp.projects.epam.com/") {
         String sonarAnalysisStatus
+        script.sh "ls -la ${context.workDir}/target/sonar/"
+        script.sh "cat  ${context.workDir}/target/sonar/report-task.txt"
         def sonarJsonReportLink = "${sonarUrl}/api/issues/search?componentKeys=${projectKey}&branch=${serviceBranch}&resolved=false&facets=severities"
-        def sonarReportMap = readProperties file: "${sonarDir}/report-task.txt"
+        def sonarReportMap = readProperties file: "${context.workDir}/target/sonar/report-task.txt"
 
         println("[JENKINS][DEBUG] Waiting for report from Sonar")
         timeout(time: 10, unit: 'MINUTES') {
@@ -48,7 +50,7 @@ class SonarMaven {
         httpRequest acceptType: 'APPLICATION_JSON',
                     url: sonarJsonReportLink,
                     httpMode: 'GET',
-                    outputFile: "${sonarDir}/sonar-report.json"
+                    outputFile: "${context.workDir}/target/sonar/sonar-report.json"
     }
     Script script
 
@@ -102,6 +104,7 @@ class SonarMaven {
             script.timeout(time: 10, unit: 'MINUTES') {
                 def qualityGateResult = script.waitForQualityGate()
                 if (qualityGateResult.status != 'OK')
+                    getSonarReportJson(context)
                     script.error "[JENKINS][ERROR] Sonar quality gate check has been failed with status " +
                             "${qualityGateResult.status}"
             }
