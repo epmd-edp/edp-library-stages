@@ -23,32 +23,15 @@ import org.apache.commons.lang.RandomStringUtils
 @Stage(name = "sonar", buildTool = ["maven"], type = [ProjectType.APPLICATION, ProjectType.AUTOTESTS, ProjectType.LIBRARY])
 class SonarMaven {
 
-    def getSonarReportJson(context, projectKey, sonarDir = "target/sonar", serviceBranch = 'master', sonarUrl = "https://sonar-epm-insr-edp-cicd.dev-test.epm-insr.projects.epam.com/") {
+    def getSonarReportJson(context, projectKey, serviceBranch = 'master', sonarUrl = "https://sonar-oc-green-sk-dev-dev.delivery.aws.main.edp.projects.epam.com/") {
         String sonarAnalysisStatus
+        script.sh "ls -la ${context.workDir}/target/sonar/"
+        script.sh "cat  ${context.workDir}/target/sonar/report-task.txt"
         def sonarJsonReportLink = "${sonarUrl}/api/issues/search?componentKeys=${projectKey}&branch=${serviceBranch}&resolved=false&facets=severities"
-        def sonarReportMap = readProperties file: "${sonarDir}/report-task.txt"
 
-        println("[JENKINS][DEBUG] Waiting for report from Sonar")
-        timeout(time: 10, unit: 'MINUTES') {
-            while (sonarAnalysisStatus != 'SUCCESS') {
-                if (sonarAnalysisStatus == 'FAILED') {
-                    error "[JENKINS][ERROR] Sonar analysis finished with status: \'${sonarAnalysisStatus}\'"
-                }
-                response = httpRequest acceptType: 'APPLICATION_JSON',
-                        url: sonarReportMap.ceTaskUrl,
-                        httpMode: 'GET',
-                        quiet: true
+        script.sh "curl -Lo ${context.workDir}/target/sonar/sonar-report.json ${sonarJsonReportLink}"
 
-                content = readJSON text: response.content
-                sonarAnalysisStatus = content.task.status
-                println("[JENKINS][DEBUG] Current status: " + sonarAnalysisStatus)
-            }
-        }
 
-        httpRequest acceptType: 'APPLICATION_JSON',
-                    url: sonarJsonReportLink,
-                    httpMode: 'GET',
-                    outputFile: "${sonarDir}/sonar-report.json"
     }
     Script script
 
@@ -102,6 +85,7 @@ class SonarMaven {
             script.timeout(time: 10, unit: 'MINUTES') {
                 def qualityGateResult = script.waitForQualityGate()
                 if (qualityGateResult.status != 'OK')
+                    getSonarReportJson(context)
                     script.error "[JENKINS][ERROR] Sonar quality gate check has been failed with status " +
                             "${qualityGateResult.status}"
             }
