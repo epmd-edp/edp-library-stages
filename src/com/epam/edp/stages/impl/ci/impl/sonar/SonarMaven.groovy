@@ -22,6 +22,34 @@ import org.apache.commons.lang.RandomStringUtils
 
 @Stage(name = "sonar", buildTool = ["maven"], type = [ProjectType.APPLICATION, ProjectType.AUTOTESTS, ProjectType.LIBRARY])
 class SonarMaven {
+
+    def getSonarReportJson(context, projectKey, sonarDir = "target/sonar", serviceBranch = 'master', sonarUrl = "https://sonar-epm-insr-edp-cicd.dev-test.epm-insr.projects.epam.com/") {
+        String sonarAnalysisStatus
+        def sonarJsonReportLink = "${sonarUrl}/api/issues/search?componentKeys=${projectKey}&branch=${serviceBranch}&resolved=false&facets=severities"
+        def sonarReportMap = readProperties file: "${sonarDir}/report-task.txt"
+
+        println("[JENKINS][DEBUG] Waiting for report from Sonar")
+        timeout(time: 10, unit: 'MINUTES') {
+            while (sonarAnalysisStatus != 'SUCCESS') {
+                if (sonarAnalysisStatus == 'FAILED') {
+                    error "[JENKINS][ERROR] Sonar analysis finished with status: \'${sonarAnalysisStatus}\'"
+                }
+                response = httpRequest acceptType: 'APPLICATION_JSON',
+                        url: sonarReportMap.ceTaskUrl,
+                        httpMode: 'GET',
+                        quiet: true
+
+                content = readJSON text: response.content
+                sonarAnalysisStatus = content.task.status
+                println("[JENKINS][DEBUG] Current status: " + sonarAnalysisStatus)
+            }
+        }
+
+        httpRequest acceptType: 'APPLICATION_JSON',
+                    url: sonarJsonReportLink,
+                    httpMode: 'GET',
+                    outputFile: "${sonarDir}/sonar-report.json"
+    }
     Script script
 
     void run(context) {
