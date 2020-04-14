@@ -24,7 +24,9 @@ class SonarCleanupApplicationLibrary {
     void run(context) {
         script.withSonarQubeEnv('Sonar') {
             def sonarAuthHeader="${script.env.SONAR_AUTH_TOKEN}:".bytes.encodeBase64().toString()
-            def sonarProjectKey = "${context.codebase.name}:change-${context.git.changeNumber}"
+            def sonarProjectKey = "${context.codebase.name}-${context.git.changeName}"
+            script.println("[JENKINS][DEBUG] SONAR HOST - ${script.env.SONAR_HOST_URL}")
+            script.println("[JENKINS][DEBUG] SONAR TOKEN - ${script.env.SONAR_AUTH_TOKEN}")
             for (int i = 1; i <= (context.git.patchsetNumber as Integer) ; i++) {
                 def response = script.httpRequest url: "${script.env.SONAR_HOST_URL}/api/components/show?key=${sonarProjectKey}-${i}",
                         httpMode: 'GET',
