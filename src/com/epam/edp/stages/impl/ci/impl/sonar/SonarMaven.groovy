@@ -22,11 +22,57 @@ import org.apache.commons.lang.RandomStringUtils
 
 @Stage(name = "sonar", buildTool = ["maven"], type = [ProjectType.APPLICATION, ProjectType.AUTOTESTS, ProjectType.LIBRARY])
 class SonarMaven {
+
+    def getSonarReportJson(context, codereviewAnalysisRunDir) {
+        String sonarAnalysisStatus
+        def sonarReportMap = script.readProperties file: "${codereviewAnalysisRunDir}/target/sonar/report-task.txt"
+        def sonarJsonReportLink = "${context.sonar.route}/api/issues/search?componentKeys=${context.codebase.name}&branch=${context.git.branch}&resolved=false&facets=severities"
+
+        script.println("[JENKINS][DEBUG] Sonar ProjectKey - ${context.codebase.name}")
+        script.println("[JENKINS][DEBUG] Branch - ${context.git.branch}")
+        script.println("[JENKINS][DEBUG] SONAR URL - ${context.sonar.route}")
+        script.println("[JENKINS][DEBUG] RUN DIR - ${codereviewAnalysisRunDir}")
+
+        script.println("[JENKINS][DEBUG] Waiting for report from Sonar")
+        script.timeout(time: 10, unit: 'MINUTES') {
+            while (sonarAnalysisStatus != 'SUCCESS') {
+                if (sonarAnalysisStatus == 'FAILED') {
+                    script.error "[JENKINS][ERROR] Sonar analysis finished with status: \'${sonarAnalysisStatus}\'"
+                }
+                def response = script.httpRequest acceptType: 'APPLICATION_JSON',
+                        url: sonarReportMap.ceTaskUrl,
+                        httpMode: 'GET',
+                        quiet: true
+
+                def content = script.readJSON text: response.content
+                sonarAnalysisStatus = content.task.status
+                script.println("[JENKINS][DEBUG] Current status: " + sonarAnalysisStatus)
+            }
+        }
+
+        script.httpRequest acceptType: 'APPLICATION_JSON',
+                    url: sonarJsonReportLink,
+                    httpMode: 'GET',
+                    outputFile: "${codereviewAnalysisRunDir}/target/sonar/sonar-report.json"
+        sendReport(context, codereviewAnalysisRunDir)
+    }
+
+    def sendReport(context, codereviewAnalysisRunDir) {
+        script.dir("${codereviewAnalysisRunDir}") {
+            script.println("[JENKINS][DEBUG] SONAR URL - ${context.sonar.route}")
+            script.sh """pwd"""
+            script.sonarToGerrit inspectionConfig: [baseConfig: [projectPath: "", sonarReportPath: "target/sonar/sonar-report.json"], serverURL: "${context.sonar.route}"],
+                    notificationConfig: [commentedIssuesNotificationRecipient: 'NONE', negativeScoreNotificationRecipient: 'NONE'],
+                    reviewConfig: [issueFilterConfig: [newIssuesOnly: false, changedLinesOnly: false, severity: 'CRITICAL']],
+                    scoreConfig: [category: 'Sonar-Verified', issueFilterConfig: [severity: 'CRITICAL']]
+        }
+    }
+
     Script script
 
     void run(context) {
         def codereviewAnalysisRunDir = context.workDir
-        if (context.job.type == "codereview") {
+        if (context.job.type == "build") {
             codereviewAnalysisRunDir = new File("${context.workDir}/../${RandomStringUtils.random(10, true, true)}")
 
             script.dir("${codereviewAnalysisRunDir}") {
@@ -73,6 +119,7 @@ class SonarMaven {
             }
             script.timeout(time: 10, unit: 'MINUTES') {
                 def qualityGateResult = script.waitForQualityGate()
+                getSonarReportJson(context, codereviewAnalysisRunDir)
                 if (qualityGateResult.status != 'OK')
                     script.error "[JENKINS][ERROR] Sonar quality gate check has been failed with status " +
                             "${qualityGateResult.status}"
