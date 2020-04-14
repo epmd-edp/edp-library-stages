@@ -22,21 +22,24 @@ class SonarCleanupApplicationLibrary {
     Script script
 
     void run(context) {
+      script.dir("${codereviewAnalysisRunDir}") {
         script.withSonarQubeEnv('Sonar') {
             def sonarAuthHeader="${script.env.SONAR_AUTH_TOKEN}:".bytes.encodeBase64().toString()
-            def sonarProjectKey = "${context.codebase.name}:change-${context.git.changeNumber}"
+            def sonarProjectKey = "${context.codebase.name}-${context.git.changeName}"
             for (int i = 1; i <= (context.git.patchsetNumber as Integer) ; i++) {
-                def response = script.httpRequest url: "${script.env.SONAR_HOST_URL}/api/components/show?key=${sonarProjectKey}-${i}",
+                def response = script.httpRequest url: "${${context.sonar.route}}/api/components/show?key=${sonarProjectKey}-${i}",
                         httpMode: 'GET',
                         customHeaders: [[name: 'Authorization', value: "Basic ${sonarAuthHeader}"]],
                         validResponseCodes: '100:399,404'
                 if (response.status == 200) {
-                    script.httpRequest url: "${script.env.SONAR_HOST_URL}/api/projects/delete?key=${sonarProjectKey}-${i}",
+                    script.httpRequest url: "${context.sonar.route}/api/projects/delete?key=${sonarProjectKey}-${i}",
                             httpMode: 'POST',
                             customHeaders: [[name: 'Authorization', value: "Basic ${sonarAuthHeader}"]]
                     script.println("[JENKINS][DEBUG] Project ${sonarProjectKey}-${i} deleted")
                 }
             }
         }
+      }
     }
+
 }
