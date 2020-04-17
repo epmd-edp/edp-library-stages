@@ -1,0 +1,7 @@
+Verified+1: CI Jenkins
+Code-Review+2: Anton Tarianyk <anton_tarianyk@epam.com>
+Submitted-by: Anton Tarianyk <anton_tarianyk@epam.com>
+Submitted-at: Fri, 17 Apr 2020 14:24:32 +0000
+Reviewed-on: https://gerrit-oc-green-edp-cicd.delivery.aws.main.edp.projects.epam.com/c/edp-library-stages/+/987
+Project: edp-library-stages
+Branch: refs/heads/master
