@@ -21,6 +21,8 @@ class ManualApprove {
     Script script
 
     void run(context) {
-        script.input "Is everything OK on project ${context.job.deployProject}?"
+        script.timeout(time: 10, unit: 'MINUTES') {
+            script.input "Is everything OK on project ${context.job.deployProject}?"
+        }
     }
 }
