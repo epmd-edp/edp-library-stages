@@ -39,6 +39,34 @@ class StageFactory {
         return classesList
     }
 
+    @NonCPS
+    def loadCustomStagesFromLib() {
+        def classesList = []
+        def res = Thread.currentThread().getContextClassLoader().getResources("com/epam/edp/customStages/impl")
+
+        try {
+            def dir = new File(res.nextElement().getFile())
+            dir.eachDirRecurse() { directory ->
+            directory.eachFile(FileType.FILES) { file ->
+                classesList.push(Class.forName("com.epam.edp.customStages.impl.${directory.path.replace("${dir.path}/", "").replaceAll('/', '.')}."
+                        + file.name.substring(0, file.name.length() - 7)))
+                }
+            }
+            if (classesList.contains(null)) {
+            classesList.toList().each { i -> 
+                if (i == null) {
+                    classesList.remove(i)
+                    }
+                }
+                script.println("[JENKINS][DEBUG] One or more files from custom stage are empty")
+            }
+        } catch (java.util.NoSuchElementException ex) {
+            script.println("[JENKINS][DEBUG] Not found custom stages from lib")
+        }
+
+        return classesList
+    }
+
     def loadCustomStages(String directory) {
         def classesList = []
         def customStagesDir
@@ -53,6 +81,10 @@ class StageFactory {
         customStagesDir.list().each {
             classesList.push(script.load(it.getRemote()))
         }
+        script.println("V: ${classesList}")
+        classesList.contains(null) ? classesList.removeAll([null])
+
+        script.println("VV: ${classesList}")
         return classesList
     }
 
