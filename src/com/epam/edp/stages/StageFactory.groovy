@@ -39,6 +39,23 @@ class StageFactory {
         return classesList
     }
 
+    @NonCPS
+    def loadCustomStagesFromLib() {
+        def classesList = []
+        def res = Thread.currentThread().getContextClassLoader().getResources("com/epam/edp/customStages/impl")
+        println("VVVV : {$res}")
+        def dir = new File(res.nextElement().getFile())
+        println("VVVV : {$dir}")
+        dir.eachDirRecurse() { directory ->
+            directory.eachFile(FileType.FILES) { file ->
+                classesList.push(Class.forName("com.epam.edp.customStages.impl.${directory.path.replace("${dir.path}/", "").replaceAll('/', '.')}."
+                        + file.name.substring(0, file.name.length() - 7)))
+            }
+        }
+        println("VVVV : {$classesList}")
+        return classesList
+    }
+
     def loadCustomStages(String directory) {
         def classesList = []
         def customStagesDir
