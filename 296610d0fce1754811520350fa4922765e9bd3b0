@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9b9f8372_c7c9a8d8",
+        "filename": "src/com/epam/edp/stages/StageFactory.groovy",
+        "patchSetId": 31
+      },
+      "lineNbr": 83,
+      "author": {
+        "id": 1000006
+      },
+      "writtenOn": "2020-04-28T12:16:00Z",
+      "side": 1,
+      "message": "Tabulation",
+      "range": {
+        "startLine": 80,
+        "startChar": 0,
+        "endLine": 83,
+        "endChar": 13
+      },
+      "revId": "296610d0fce1754811520350fa4922765e9bd3b0",
+      "serverId": "0350cb7f-c1b1-4710-a647-f6632dbafb3c",
+      "unresolved": true
+    }
+  ]
+}
