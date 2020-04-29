@@ -182,12 +182,28 @@ class DeployHelm {
         codebase.cdPipelineStageName = context.job.stageName
 
         def imageName = codebase.inputIs ? codebase.inputIs : codebase.normalizedName
+        def parametersMap = []
+        parametersMap.addAll([
+                ['name': 'namespace', 'value': ${context.job.deployProject}],
+                ['name': 'cdPipelineName', 'value': ${codebase.cdPipelineName}],
+                ['name': 'cdPipelineStageName', 'value': ${codebase.cdPipelineStageName}],
+                ['name': 'image.name', 'value': ${context.environment.config.dockerRegistryHost}/${imageName}],
+                ['name': 'image.version', 'value': ${codebase.version}],
+                ['name': 'database.required', 'value': ${codebase.db_kind != "" ? true : false}],
+                ['name': 'database.version', 'value': ${codebase.db_version}],
+                ['name': 'database.capacity', 'value': ${codebase.db_capacity}],
+                ['name': 'database.database.storageClass', 'value': ${codebase.db_storage}],
+                ['name': 'ingress.path', 'value': ${codebase.route_path}],
+                ['name': 'ingress.site', 'value': ${codebase.route_site}],
+                ['name': 'dnsWildcard', 'value': ${context.job.dnsWildcard}],
+        ])
+
         context.platform.deployCodebase(
                 context.job.deployProject,
                 "${deployTemplatesPath}",
                 "${context.environment.config.dockerRegistryHost}/${imageName}",
-                codebase, context.job.dnsWildcard,
-                context.job.deployTimeout
+                context.job.deployTimeout,
+                parametersMap
         )
     }
 
