@@ -17,7 +17,7 @@ package com.epam.edp.stages.impl.ci.impl.builddockerfileimage
 import com.epam.edp.stages.impl.ci.ProjectType
 import com.epam.edp.stages.impl.ci.Stage
 
-@Stage(name = "build-image-from-dockerfile", buildTool = ["maven","gradle","python", "any"], type = [ProjectType.APPLICATION,ProjectType.AUTOTESTS])
+@Stage(name = "build-image-from-dockerfile", buildTool = ["maven","gradle", "any"], type = [ProjectType.APPLICATION,ProjectType.AUTOTESTS])
 class BuildDockerfileImageAny {
     Script script
 
