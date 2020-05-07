@@ -1,0 +1,8 @@
+Verified+1: CI Jenkins
+Code-Review+1: Serhii Shydlovskyi <serhii_shydlovskyi@epam.com>
+Code-Review+2: Alexander Morozov <alexander_morozov@epam.com>
+Submitted-by: Alexander Morozov <alexander_morozov@epam.com>
+Submitted-at: Thu, 07 May 2020 09:26:37 +0000
+Reviewed-on: https://gerrit-oc-green-edp-cicd.delivery.aws.main.edp.projects.epam.com/c/edp-library-stages/+/2242
+Project: edp-library-stages
+Branch: refs/heads/release-2.3
