@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "f7c99d0c_03b7ad87",
+        "filename": "src/com/epam/edp/stages/impl/ci/impl/checksnapshot/CheckSnapshotDependenciesMaven.groovy",
+        "patchSetId": 1
+      },
+      "lineNbr": 6,
+      "author": {
+        "id": 1000027
+      },
+      "writtenOn": "2020-05-07T11:30:08Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "94b2ae03_a7251356",
+      "range": {
+        "startLine": 6,
+        "startChar": 15,
+        "endLine": 6,
+        "endChar": 42
+      },
+      "revId": "917b6580fcb18104f1993b128e4ce3db1c677a34",
+      "serverId": "0350cb7f-c1b1-4710-a647-f6632dbafb3c",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "030421c0_93fa3ffd",
         "filename": "src/com/epam/edp/stages/impl/ci/impl/checksnapshot/CheckSnapshotDependenciesMaven.groovy",
         "patchSetId": 1
@@ -36,6 +60,30 @@
       "writtenOn": "2020-05-07T11:10:21Z",
       "side": 1,
       "message": "Can we just analyze the output without writing to file?",
+      "range": {
+        "startLine": 13,
+        "startChar": 12,
+        "endLine": 13,
+        "endChar": 99
+      },
+      "revId": "917b6580fcb18104f1993b128e4ce3db1c677a34",
+      "serverId": "0350cb7f-c1b1-4710-a647-f6632dbafb3c",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "996c6735_0b9a5fae",
+        "filename": "src/com/epam/edp/stages/impl/ci/impl/checksnapshot/CheckSnapshotDependenciesMaven.groovy",
+        "patchSetId": 1
+      },
+      "lineNbr": 13,
+      "author": {
+        "id": 1000027
+      },
+      "writtenOn": "2020-05-07T11:30:08Z",
+      "side": 1,
+      "message": "The maven plugin does not provide dependency output functions only",
+      "parentUuid": "030421c0_93fa3ffd",
       "range": {
         "startLine": 13,
         "startChar": 12,
