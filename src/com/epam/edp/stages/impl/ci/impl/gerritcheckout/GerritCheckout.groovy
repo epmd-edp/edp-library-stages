@@ -23,6 +23,7 @@ class GerritCheckout {
     Script script
 
     def run(context) {
+        script.println("[JENKINS][DEBUG] START CHECKOUT")
         script.dir("${context.workDir}") {
             script.checkout([$class                           : 'GitSCM', branches: [[name: "${context.git.changeName}"]],
                              doGenerateSubmoduleConfigurations: false, extensions: [],
@@ -31,5 +32,6 @@ class GerritCheckout {
                                                                   credentialsId: "${context.git.credentialsId}",
                                                                   url          : "${context.codebase.config.cloneUrl}"]]])
         }
+        script.println("[JENKINS][DEBUG] END CHECKOUT")
     }
 }
