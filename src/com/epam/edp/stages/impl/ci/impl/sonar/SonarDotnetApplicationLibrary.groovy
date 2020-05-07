@@ -59,7 +59,7 @@ class SonarDotnetApplicationLibrary {
         }
     }
 
-    def sendSonarScan(sonarProjectName, codereviewAnalysisRunDir, buildTool, credentialsId, scannerHome) {
+    def sendSonarScan(sonarProjectName, codereviewAnalysisRunDir, buildTool, scannerHome) {
         script.dir("${codereviewAnalysisRunDir}") {
                  script.withSonarQubeEnv('Sonar') {
                      script.sh """
@@ -79,10 +79,10 @@ class SonarDotnetApplicationLibrary {
         def codereviewAnalysisRunDir = context.workDir
         def scannerHome = script.tool 'SonarScannerMSBuild'
         if (context.job.type == "codereview") {
-            sendSonarScan("${context.codebase.name}:change-${context.git.changeNumber}-${context.git.patchsetNumber}", codereviewAnalysisRunDir, context.buildTool, context.nexus.credentialsId, scannerHome)
+            sendSonarScan("${context.codebase.name}:change-${context.git.changeNumber}-${context.git.patchsetNumber}", codereviewAnalysisRunDir, context.buildTool, scannerHome)
             getSonarReportJson(context, codereviewAnalysisRunDir)
         } else {
-           sendSonarScan(context.codebase.name, codereviewAnalysisRunDir, context.buildTool, context.nexus.credentialsId, scannerHome)
+           sendSonarScan(context.codebase.name, codereviewAnalysisRunDir, context.buildTool, scannerHome)
         }
         script.timeout(time: 10, unit: 'MINUTES') {
             def qualityGateResult = script.waitForQualityGate()
