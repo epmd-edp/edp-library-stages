@@ -27,11 +27,6 @@ class SonarMaven {
         def sonarReportMap = script.readProperties file: "${codereviewAnalysisRunDir}/target/sonar/report-task.txt"
         def sonarJsonReportLink = "${context.sonar.route}/api/issues/search?componentKeys=${context.codebase.name}:change-${context.git.changeNumber}-${context.git.patchsetNumber}&branch=${context.git.branch}&resolved=false&facets=severities"
 
-        script.println("[JENKINS][DEBUG] Sonar ProjectKey - ${context.codebase.name}:change-${context.git.changeNumber}-${context.git.patchsetNumber}")
-        script.println("[JENKINS][DEBUG] Branch - ${context.git.branch}")
-        script.println("[JENKINS][DEBUG] SONAR URL - ${context.sonar.route}")
-        script.println("[JENKINS][DEBUG] RUN DIR - ${codereviewAnalysisRunDir}")
-
         script.println("[JENKINS][DEBUG] Waiting for report from Sonar")
         script.timeout(time: 10, unit: 'MINUTES') {
             while (sonarAnalysisStatus != 'SUCCESS') {
@@ -53,14 +48,12 @@ class SonarMaven {
                     url: sonarJsonReportLink,
                     httpMode: 'GET',
                     outputFile: "${codereviewAnalysisRunDir}/target/sonar/sonar-report.json"
-        sendReport(context, codereviewAnalysisRunDir)
+        sendReport(context.sonar.route, codereviewAnalysisRunDir)
     }
 
-    def sendReport(context, codereviewAnalysisRunDir) {
+    def sendReport(sonarURL, codereviewAnalysisRunDir) {
         script.dir("${codereviewAnalysisRunDir}") {
-            script.println("[JENKINS][DEBUG] SONAR URL - ${context.sonar.route}")
-            script.sh """pwd"""
-            script.sonarToGerrit inspectionConfig: [baseConfig: [projectPath: "", sonarReportPath: "target/sonar/sonar-report.json"], serverURL: "${context.sonar.route}"],
+            script.sonarToGerrit inspectionConfig: [baseConfig: [projectPath: "", sonarReportPath: "target/sonar/sonar-report.json"], serverURL: "${sonarURL}"],
                     notificationConfig: [commentedIssuesNotificationRecipient: 'NONE', negativeScoreNotificationRecipient: 'NONE'],
                     reviewConfig: [issueFilterConfig: [newIssuesOnly: false, changedLinesOnly: false, severity: 'CRITICAL']],
                     scoreConfig: [category: 'Code-Review', noIssuesScore: +1, issuesScore: -1, issueFilterConfig: [severity: 'CRITICAL']]
