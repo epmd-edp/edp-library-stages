@@ -71,14 +71,19 @@ class SonarGradleApplicationLibrary {
                 }
         }
     }
+
     Script script
 
     void run(context) {
         def codereviewAnalysisRunDir = context.workDir
         if (context.job.type == "codereview") {
-            sendSonarScan("${context.codebase.name}:change-${context.git.changeNumber}-${context.git.patchsetNumber}", codereviewAnalysisRunDir, context.buildTool, context.nexus.credentialsId)
-            getSonarReportJson(context, codereviewAnalysisRunDir)
-            sendReport(context.sonar.route, codereviewAnalysisRunDir)
+            if (System.getenv("PLATFORM_TYPE") == "kubernetes") {
+                sendSonarScan(context.codebase.name, codereviewAnalysisRunDir, context.buildTool, context.nexus.credentialsId)
+            } else {
+                sendSonarScan("${context.codebase.name}:change-${context.git.changeNumber}-${context.git.patchsetNumber}", codereviewAnalysisRunDir, context.buildTool, context.nexus.credentialsId)
+                getSonarReportJson(context, codereviewAnalysisRunDir)
+                sendReport(context.sonar.route, codereviewAnalysisRunDir)
+            }
         } else {
             sendSonarScan(context.codebase.name, codereviewAnalysisRunDir, context.buildTool, context.nexus.credentialsId)
         }

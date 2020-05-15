@@ -109,9 +109,13 @@ class SonarMaven {
               """
                 }
             }
-            sendSonarScan("${context.codebase.name}:change-${context.git.changeNumber}-${context.git.patchsetNumber}", codereviewAnalysisRunDir, context.buildTool, context.nexus.credentialsId)
-            getSonarReportJson(context, codereviewAnalysisRunDir)
-            sendReport(context.sonar.route, codereviewAnalysisRunDir)
+            if (System.getenv("PLATFORM_TYPE") == "kubernetes") {
+                sendSonarScan(context.codebase.name, codereviewAnalysisRunDir, context.buildTool, scannerHome)
+            } else {
+                sendSonarScan("${context.codebase.name}:change-${context.git.changeNumber}-${context.git.patchsetNumber}", codereviewAnalysisRunDir, context.buildTool, scannerHome)
+                getSonarReportJson(context, codereviewAnalysisRunDir)
+                sendReport(context.sonar.route, codereviewAnalysisRunDir)
+            }
         } else {
             sendSonarScan(context.codebase.name, codereviewAnalysisRunDir, context.buildTool, context.nexus.credentialsId)
         }
