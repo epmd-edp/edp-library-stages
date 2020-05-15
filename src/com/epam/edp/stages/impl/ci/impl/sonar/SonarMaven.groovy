@@ -109,6 +109,7 @@ class SonarMaven {
               """
                 }
             }
+            script.println("[JENKINS][DEBUG] Platform type: ${context.PlatformType.values()}")
             sendSonarScan("${context.codebase.name}:change-${context.git.changeNumber}-${context.git.patchsetNumber}", codereviewAnalysisRunDir, context.buildTool, context.nexus.credentialsId)
             getSonarReportJson(context, codereviewAnalysisRunDir)
             sendReport(context.sonar.route, codereviewAnalysisRunDir)
