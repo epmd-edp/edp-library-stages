@@ -72,6 +72,15 @@ class SonarMaven {
             }
         }
     }
+    def getPlatform(context, platform, codereviewAnalysisRunDir) {
+        if (platform == "kubernetes") {
+            sendSonarScan(context.codebase.name, codereviewAnalysisRunDir, context.buildTool, context.nexus.credentialsId)
+        } else {
+            sendSonarScan("${context.codebase.name}:change-${context.git.changeNumber}-${context.git.patchsetNumber}", codereviewAnalysisRunDir, context.buildTool, context.nexus.credentialsId)
+            getSonarReportJson(context, codereviewAnalysisRunDir)
+            sendReport(context.sonar.route, codereviewAnalysisRunDir)
+        }
+    }
 
     Script script
 
@@ -109,9 +118,7 @@ class SonarMaven {
               """
                 }
             }
-            sendSonarScan("${context.codebase.name}:change-${context.git.changeNumber}-${context.git.patchsetNumber}", codereviewAnalysisRunDir, context.buildTool, context.nexus.credentialsId)
-            getSonarReportJson(context, codereviewAnalysisRunDir)
-            sendReport(context.sonar.route, codereviewAnalysisRunDir)
+            getPlatform(context, System.getenv("PLATFORM_TYPE"), codereviewAnalysisRunDir)
         } else {
             sendSonarScan(context.codebase.name, codereviewAnalysisRunDir, context.buildTool, context.nexus.credentialsId)
         }

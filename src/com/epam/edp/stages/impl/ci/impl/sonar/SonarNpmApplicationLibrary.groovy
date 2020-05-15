@@ -66,6 +66,15 @@ class SonarNpmApplicationLibrary {
                 }
         }
     }
+    def getPlatform(context, platform, codereviewAnalysisRunDir, scannerHome) {
+        if (platform == "kubernetes") {
+            sendSonarScan(context.codebase.name, codereviewAnalysisRunDir, scannerHome)
+        } else {
+            sendSonarScan("${context.codebase.name}:change-${context.git.changeNumber}-${context.git.patchsetNumber}", codereviewAnalysisRunDir, scannerHome)
+            getSonarReportJson(context, codereviewAnalysisRunDir)
+            sendReport(context.sonar.route, codereviewAnalysisRunDir)
+        }
+    }
 
     Script script
 
@@ -73,9 +82,7 @@ class SonarNpmApplicationLibrary {
         def scannerHome = script.tool 'SonarQube Scanner'
         def codereviewAnalysisRunDir = context.workDir
         if (context.job.type == "codereview") {
-            sendSonarScan("${context.codebase.name}:change-${context.git.changeNumber}-${context.git.patchsetNumber}", codereviewAnalysisRunDir, scannerHome)
-            getSonarReportJson(context, codereviewAnalysisRunDir)
-            sendReport(context.sonar.route, codereviewAnalysisRunDir)
+            getPlatform(context, System.getenv("PLATFORM_TYPE"), codereviewAnalysisRunDir, scannerHome)
         } else {
             sendSonarScan(context.codebase.name, codereviewAnalysisRunDir, scannerHome)
         }
