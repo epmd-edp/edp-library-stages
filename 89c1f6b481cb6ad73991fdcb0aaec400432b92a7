@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d415b094_96accc3c",
+        "filename": "src/com/epam/edp/stages/impl/ci/impl/sonar/SonarDotnetApplicationLibrary.groovy",
+        "patchSetId": 16
+      },
+      "lineNbr": 81,
+      "author": {
+        "id": 1000005
+      },
+      "writtenOn": "2020-05-18T13:37:38Z",
+      "side": 1,
+      "message": "move to separate method",
+      "revId": "89c1f6b481cb6ad73991fdcb0aaec400432b92a7",
+      "serverId": "0350cb7f-c1b1-4710-a647-f6632dbafb3c",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3111422f_346aaa98",
+        "filename": "src/com/epam/edp/stages/impl/ci/impl/sonar/SonarGradleApplicationLibrary.groovy",
+        "patchSetId": 16
+      },
+      "lineNbr": 79,
+      "author": {
+        "id": 1000005
+      },
+      "writtenOn": "2020-05-18T13:37:38Z",
+      "side": 1,
+      "message": "the same",
+      "revId": "89c1f6b481cb6ad73991fdcb0aaec400432b92a7",
+      "serverId": "0350cb7f-c1b1-4710-a647-f6632dbafb3c",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "825e9b5f_3338faaf",
+        "filename": "src/com/epam/edp/stages/impl/ci/impl/sonar/SonarMaven.groovy",
+        "patchSetId": 16
+      },
+      "lineNbr": 111,
+      "author": {
+        "id": 1000005
+      },
+      "writtenOn": "2020-05-18T13:37:38Z",
+      "side": 1,
+      "message": "the same",
+      "revId": "89c1f6b481cb6ad73991fdcb0aaec400432b92a7",
+      "serverId": "0350cb7f-c1b1-4710-a647-f6632dbafb3c",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a600bab7_cf8713b0",
+        "filename": "src/com/epam/edp/stages/impl/ci/impl/sonar/SonarNpmApplicationLibrary.groovy",
+        "patchSetId": 16
+      },
+      "lineNbr": 75,
+      "author": {
+        "id": 1000005
+      },
+      "writtenOn": "2020-05-18T13:37:38Z",
+      "side": 1,
+      "message": "the same",
+      "revId": "89c1f6b481cb6ad73991fdcb0aaec400432b92a7",
+      "serverId": "0350cb7f-c1b1-4710-a647-f6632dbafb3c",
+      "unresolved": true
+    }
+  ]
+}
