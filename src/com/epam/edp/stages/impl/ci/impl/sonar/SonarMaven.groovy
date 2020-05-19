@@ -72,8 +72,8 @@ class SonarMaven {
             }
         }
     }
-    def runSonarScannerDependsOnPlatform(context, platform, codereviewAnalysisRunDir) {
-        if (platform == "kubernetes") {
+    def runSonarScannerDependsOnPlatform(context, platform, strategy, codereviewAnalysisRunDir) {
+        if (platform == "kubernetes" || strategy == "import") {
             sendSonarScan(context.codebase.name, codereviewAnalysisRunDir, context.buildTool, context.nexus.credentialsId)
         } else {
             sendSonarScan("${context.codebase.name}:change-${context.git.changeNumber}-${context.git.patchsetNumber}", codereviewAnalysisRunDir, context.buildTool, context.nexus.credentialsId)
@@ -117,7 +117,7 @@ class SonarMaven {
               """
                 }
             }
-            runSonarScannerDependsOnPlatform(context, System.getenv("PLATFORM_TYPE"), codereviewAnalysisRunDir)
+            runSonarScannerDependsOnPlatform(context, System.getenv("PLATFORM_TYPE"), codebase.strategy, codereviewAnalysisRunDir)
         } else {
             sendSonarScan(context.codebase.name, codereviewAnalysisRunDir, context.buildTool, context.nexus.credentialsId)
         }
