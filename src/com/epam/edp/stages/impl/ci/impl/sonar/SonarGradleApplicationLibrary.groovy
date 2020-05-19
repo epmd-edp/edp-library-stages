@@ -72,7 +72,7 @@ class SonarGradleApplicationLibrary {
         }
     }
     def runSonarScannerDependsOnPlatform(context, platform, codereviewAnalysisRunDir) {
-        if (platform == "kubernetes") {
+        if (platform == "kubernetes" || context.codebase.strategy == "import") {
             sendSonarScan(context.codebase.name, codereviewAnalysisRunDir, context.buildTool, context.nexus.credentialsId)
         } else {
             sendSonarScan("${context.codebase.name}:change-${context.git.changeNumber}-${context.git.patchsetNumber}", codereviewAnalysisRunDir, context.buildTool, context.nexus.credentialsId)
