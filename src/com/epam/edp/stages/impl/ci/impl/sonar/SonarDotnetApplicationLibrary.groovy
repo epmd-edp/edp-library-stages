@@ -46,15 +46,15 @@ class SonarDotnetApplicationLibrary {
         script.httpRequest acceptType: 'APPLICATION_JSON',
                     url: sonarJsonReportLink,
                     httpMode: 'GET',
-                    outputFile: "${context.workDir}/.sonarqube/out/.sonar/sonar-report.json"
+                    outputFile: "target/sonar/sonar-report.json"
     }
 
     def sendReport(sonarURL, codereviewAnalysisRunDir) {
         script.dir("${codereviewAnalysisRunDir}") {
-            script.sonarToGerrit inspectionConfig: [baseConfig: [projectPath: "", sonarReportPath: "${codereviewAnalysisRunDir}/.sonarqube/out/.sonar/sonar-report.json"], serverURL: "${sonarURL}"],
+            script.sonarToGerrit inspectionConfig: [baseConfig: [projectPath: "${codereviewAnalysisRunDir}", sonarReportPath: "target/sonar/sonar-report.json"], serverURL: "${sonarURL}"],
                     notificationConfig: [commentedIssuesNotificationRecipient: 'NONE', negativeScoreNotificationRecipient: 'NONE'],
-                    reviewConfig: [issueFilterConfig: [newIssuesOnly: false, changedLinesOnly: false, severity: 'CRITICAL']],
-                    scoreConfig: [category: 'Sonar-Verified', noIssuesScore: +1, issuesScore: -1, issueFilterConfig: [severity: 'CRITICAL']]
+                    reviewConfig: [issueFilterConfig: [newIssuesOnly: true, changedLinesOnly: true, severity: 'INFO']],
+                    scoreConfig: [category: 'Sonar-Verified', noIssuesScore: +1, issuesScore: -1, issueFilterConfig: [severity: 'INFO']]
         }
     }
 
@@ -72,8 +72,8 @@ class SonarDotnetApplicationLibrary {
                  }
         }
     }
-    def runSonarScannerDependsOnPlatform(context, platform, codereviewAnalysisRunDir, scannerHome) {
-        if (platform == "kubernetes") {
+    def runSonarScannerDependsOnPlatformAndStrategy(context, platform, codereviewAnalysisRunDir, scannerHome) {
+        if (platform == "kubernetes" || context.codebase.config.strategy == "import") {
             sendSonarScan(context.codebase.name, codereviewAnalysisRunDir, context.buildTool, scannerHome)
         } else {
             sendSonarScan("${context.codebase.name}:change-${context.git.changeNumber}-${context.git.patchsetNumber}", codereviewAnalysisRunDir, context.buildTool, scannerHome)
@@ -87,7 +87,7 @@ class SonarDotnetApplicationLibrary {
         def codereviewAnalysisRunDir = context.workDir
         def scannerHome = script.tool 'SonarScannerMSBuild'
         if (context.job.type == "codereview") {
-            runSonarScannerDependsOnPlatform(context, System.getenv("PLATFORM_TYPE"), codereviewAnalysisRunDir, scannerHome)
+            runSonarScannerDependsOnPlatformAndStrategy(context, System.getenv("PLATFORM_TYPE"), codereviewAnalysisRunDir, scannerHome)
         } else {
             sendSonarScan(context.codebase.name, codereviewAnalysisRunDir, context.buildTool, scannerHome)
         }
