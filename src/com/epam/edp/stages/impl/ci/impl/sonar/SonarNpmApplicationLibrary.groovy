@@ -67,7 +67,7 @@ class SonarNpmApplicationLibrary {
         }
     }
     def runSonarScannerDependsOnPlatform(context, platform, codereviewAnalysisRunDir, scannerHome) {
-        if (platform == "kubernetes") {
+        if (platform == "kubernetes" || context.codebase.strategy == "import") {
             sendSonarScan(context.codebase.name, codereviewAnalysisRunDir, scannerHome)
         } else {
             sendSonarScan("${context.codebase.name}:change-${context.git.changeNumber}-${context.git.patchsetNumber}", codereviewAnalysisRunDir, scannerHome)
