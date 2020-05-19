@@ -51,7 +51,7 @@ class SonarDotnetApplicationLibrary {
 
     def sendReport(sonarURL, codereviewAnalysisRunDir) {
         script.dir("${codereviewAnalysisRunDir}") {
-            script.sonarToGerrit inspectionConfig: [baseConfig: [projectPath: "", sonarReportPath: "${codereviewAnalysisRunDir}/.sonarqube/out/.sonar/sonar-report.json"], serverURL: "${sonarURL}"],
+            script.sonarToGerrit inspectionConfig: [autoMatch: true, baseConfig: [projectPath: "", sonarReportPath: "${codereviewAnalysisRunDir}/.sonarqube/out/.sonar/sonar-report.json"], serverURL: "${sonarURL}"],
                     notificationConfig: [commentedIssuesNotificationRecipient: 'NONE', negativeScoreNotificationRecipient: 'NONE'],
                     reviewConfig: [issueFilterConfig: [newIssuesOnly: false, changedLinesOnly: false, severity: 'CRITICAL']],
                     scoreConfig: [category: 'Sonar-Verified', noIssuesScore: +1, issuesScore: -1, issueFilterConfig: [severity: 'CRITICAL']]
@@ -72,8 +72,8 @@ class SonarDotnetApplicationLibrary {
                  }
         }
     }
-    def runSonarScannerDependsOnPlatform(context, platform, codereviewAnalysisRunDir, scannerHome) {
-        if (platform == "kubernetes") {
+    def runSonarScannerDependsOnPlatformAndStrategy(context, platform, codereviewAnalysisRunDir, scannerHome) {
+        if (platform == "kubernetes" || context.codebase.config.strategy == "import") {
             sendSonarScan(context.codebase.name, codereviewAnalysisRunDir, context.buildTool, scannerHome)
         } else {
             sendSonarScan("${context.codebase.name}:change-${context.git.changeNumber}-${context.git.patchsetNumber}", codereviewAnalysisRunDir, context.buildTool, scannerHome)
@@ -87,7 +87,7 @@ class SonarDotnetApplicationLibrary {
         def codereviewAnalysisRunDir = context.workDir
         def scannerHome = script.tool 'SonarScannerMSBuild'
         if (context.job.type == "codereview") {
-            runSonarScannerDependsOnPlatform(context, System.getenv("PLATFORM_TYPE"), codereviewAnalysisRunDir, scannerHome)
+            runSonarScannerDependsOnPlatformAndStrategy(context, System.getenv("PLATFORM_TYPE"), codereviewAnalysisRunDir, scannerHome)
         } else {
             sendSonarScan(context.codebase.name, codereviewAnalysisRunDir, context.buildTool, scannerHome)
         }
@@ -98,7 +98,9 @@ class SonarDotnetApplicationLibrary {
                         "${qualityGateResult.status}"
         }
 
-        if (context.job.type == "build")
+        if (context.job.type == "build") {
+            script.println("[JENKINS][DEBUG] CHECK START CLENUP")
             new SonarCleanupApplicationLibrary(script: script).run(context)
+        }
     }
 }
