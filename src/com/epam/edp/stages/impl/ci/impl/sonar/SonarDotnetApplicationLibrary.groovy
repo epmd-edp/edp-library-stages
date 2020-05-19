@@ -46,7 +46,7 @@ class SonarDotnetApplicationLibrary {
         script.httpRequest acceptType: 'APPLICATION_JSON',
                     url: sonarJsonReportLink,
                     httpMode: 'GET',
-                    outputFile: "${context.workDir}/.sonarqube/out/.sonar/sonar-report.json"
+                    outputFile: "${codereviewAnalysisRunDir}/.sonarqube/out/.sonar/sonar-report.json"
     }
 
     def sendReport(sonarURL, codereviewAnalysisRunDir) {
@@ -72,8 +72,8 @@ class SonarDotnetApplicationLibrary {
                  }
         }
     }
-    def runSonarScannerDependsOnPlatform(context, platform, codereviewAnalysisRunDir, scannerHome) {
-        if (platform == "kubernetes") {
+    def runSonarScannerDependsOnPlatformAndStrategy(context, platform, codereviewAnalysisRunDir, scannerHome) {
+        if (platform == "kubernetes" || context.codebase.config.strategy == "import") {
             sendSonarScan(context.codebase.name, codereviewAnalysisRunDir, context.buildTool, scannerHome)
         } else {
             sendSonarScan("${context.codebase.name}:change-${context.git.changeNumber}-${context.git.patchsetNumber}", codereviewAnalysisRunDir, context.buildTool, scannerHome)
@@ -87,7 +87,7 @@ class SonarDotnetApplicationLibrary {
         def codereviewAnalysisRunDir = context.workDir
         def scannerHome = script.tool 'SonarScannerMSBuild'
         if (context.job.type == "codereview") {
-            runSonarScannerDependsOnPlatform(context, System.getenv("PLATFORM_TYPE"), codereviewAnalysisRunDir, scannerHome)
+            runSonarScannerDependsOnPlatformAndStrategy(context, System.getenv("PLATFORM_TYPE"), codereviewAnalysisRunDir, scannerHome)
         } else {
             sendSonarScan(context.codebase.name, codereviewAnalysisRunDir, context.buildTool, scannerHome)
         }
