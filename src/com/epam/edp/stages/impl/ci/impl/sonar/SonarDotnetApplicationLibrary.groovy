@@ -72,8 +72,8 @@ class SonarDotnetApplicationLibrary {
                  }
         }
     }
-    def runSonarScannerDependsOnPlatform(context, platform, codereviewAnalysisRunDir, scannerHome) {
-        if (platform == "kubernetes") {
+    def runSonarScannerDependsOnPlatform(context, platform, strategy, codereviewAnalysisRunDir, scannerHome) {
+        if (platform == "kubernetes" || strategy == "import") {
             sendSonarScan(context.codebase.name, codereviewAnalysisRunDir, context.buildTool, scannerHome)
         } else {
             sendSonarScan("${context.codebase.name}:change-${context.git.changeNumber}-${context.git.patchsetNumber}", codereviewAnalysisRunDir, context.buildTool, scannerHome)
@@ -87,7 +87,7 @@ class SonarDotnetApplicationLibrary {
         def codereviewAnalysisRunDir = context.workDir
         def scannerHome = script.tool 'SonarScannerMSBuild'
         if (context.job.type == "codereview") {
-            runSonarScannerDependsOnPlatform(context, System.getenv("PLATFORM_TYPE"), codereviewAnalysisRunDir, scannerHome)
+            runSonarScannerDependsOnPlatform(context, System.getenv("PLATFORM_TYPE"), codebase.strategy, codereviewAnalysisRunDir, scannerHome)
         } else {
             sendSonarScan(context.codebase.name, codereviewAnalysisRunDir, context.buildTool, scannerHome)
         }
