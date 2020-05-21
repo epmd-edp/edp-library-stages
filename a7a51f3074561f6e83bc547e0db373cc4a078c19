@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "bc2a66bf_50220f38",
+        "filename": "src/com/epam/edp/stages/impl/ci/impl/jirafixversion/JiraFixVersion.groovy",
+        "patchSetId": 2
+      },
+      "lineNbr": 61,
+      "author": {
+        "id": 1000009
+      },
+      "writtenOn": "2020-05-21T10:42:32Z",
+      "side": 1,
+      "message": "I don\u0027t think this is a good idea to put ownerReference details in the pipeline. I would rather see that in the operators. \n\nReasoning for that is that Kubernetes knows better how to handle owner reference field, by providing the method for adding it. In case something will change, we need to rewrite our pipelines as well. \n\nAdding the owner reference while proceeding the request is better, in my opinion.",
+      "range": {
+        "startLine": 60,
+        "startChar": 7,
+        "endLine": 61,
+        "endChar": 147
+      },
+      "revId": "a7a51f3074561f6e83bc547e0db373cc4a078c19",
+      "serverId": "0350cb7f-c1b1-4710-a647-f6632dbafb3c",
+      "unresolved": true
+    }
+  ]
+}
