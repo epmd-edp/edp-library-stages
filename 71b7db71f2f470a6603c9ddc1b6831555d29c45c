@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8e38cc92_618f3dfc",
+        "filename": "src/com/epam/edp/stages/impl/ci/impl/sonarcleanup/SonarCleanupApplicationLibrary.groovy",
+        "patchSetId": 2
+      },
+      "lineNbr": 28,
+      "author": {
+        "id": 1000005
+      },
+      "writtenOn": "2020-05-22T10:12:35Z",
+      "side": 1,
+      "message": "what does magic number \u00270\u0027 mean ?",
+      "revId": "71b7db71f2f470a6603c9ddc1b6831555d29c45c",
+      "serverId": "0350cb7f-c1b1-4710-a647-f6632dbafb3c",
+      "unresolved": true
+    }
+  ]
+}
