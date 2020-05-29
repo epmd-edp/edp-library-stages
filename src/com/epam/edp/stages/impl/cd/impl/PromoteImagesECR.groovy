@@ -136,6 +136,7 @@ class PromoteImagesECR {
                         updateCodebaseimagestreams(codebase.outputIs, "$dockerRegistryHost}/${codebase.outputIs}", codebase.version, context)
                     }
                     catch (Exception ex) {
+                        script.println("[JENKINS][DEBUG] Promote failed with exception:\n${ex}")
                         script.error("[JENKINS][ERROR] Promoting image for ${codebase.name} failed")
                     }
                     finally {
