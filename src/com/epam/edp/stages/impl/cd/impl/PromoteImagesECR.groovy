@@ -118,6 +118,8 @@ class PromoteImagesECR {
                         def kanikoTemplateFilePath = setKanikoTemplate("${context.workDir}/kaniko-template.json", buildconfigName, codebase.outputIs, dockerRegistryHost, context, codebase)
                         context.platform.apply(kanikoTemplateFilePath.getRemote())
                         while (!context.platform.getObjectStatus("pod", buildconfigName)["initContainerStatuses"][0].state.keySet().contains("running")) {
+                            script.print(" V0: ")
+                            script.println(context.platform.getObjectStatus("pod", buildconfigName))
                             script.println("[JENKINS][DEBUG] Waiting for init container in Kaniko is started")
                             script.sleep(5)
                         }
@@ -136,6 +138,7 @@ class PromoteImagesECR {
                         updateCodebaseimagestreams(codebase.outputIs, "$dockerRegistryHost}/${codebase.outputIs}", codebase.version, context)
                     }
                     catch (Exception ex) {
+                        script.println(" V1: ${ex}")
                         script.error("[JENKINS][ERROR] Promoting image for ${codebase.name} failed")
                     }
                     finally {
