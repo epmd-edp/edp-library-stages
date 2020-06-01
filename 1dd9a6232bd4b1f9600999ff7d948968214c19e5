@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f04d1bf3_82ae57ef",
+        "filename": "src/com/epam/edp/stages/impl/cd/impl/PromoteImagesECR.groovy",
+        "patchSetId": 11
+      },
+      "lineNbr": 140,
+      "author": {
+        "id": 1000006
+      },
+      "writtenOn": "2020-06-01T08:41:21Z",
+      "side": 1,
+      "message": "Promoting image for ${codebase.name} failed",
+      "range": {
+        "startLine": 140,
+        "startChar": 55,
+        "endLine": 140,
+        "endChar": 89
+      },
+      "revId": "1dd9a6232bd4b1f9600999ff7d948968214c19e5",
+      "serverId": "0350cb7f-c1b1-4710-a647-f6632dbafb3c",
+      "unresolved": true
+    }
+  ]
+}
