@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a49d39f8_95443fdc",
+        "filename": "src/com/epam/edp/stages/impl/cd/impl/PromoteImagesECR.groovy",
+        "patchSetId": 10
+      },
+      "lineNbr": 139,
+      "author": {
+        "id": 1000006
+      },
+      "writtenOn": "2020-06-01T08:19:22Z",
+      "side": 1,
+      "message": "script.println \"[JENKINS][ERROR] Trace: ${ex.getStackTrace().collect { it.toString() }.join(\u0027\\n\u0027)}\"\nscript.error(\"[JENKINS][ERROR] Stage ${stageName} has been failed\\r\\n Exception - ${ex}\")",
+      "range": {
+        "startLine": 139,
+        "startChar": 24,
+        "endLine": 139,
+        "endChar": 96
+      },
+      "revId": "cf82fe30d7abb171ee44b7181e35fc09418aa8ab",
+      "serverId": "0350cb7f-c1b1-4710-a647-f6632dbafb3c",
+      "unresolved": true
+    }
+  ]
+}
