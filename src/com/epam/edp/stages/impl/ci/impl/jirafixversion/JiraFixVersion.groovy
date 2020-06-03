@@ -98,6 +98,7 @@ class JiraFixVersion {
 
     void run(context) {
         try {
+            throw new Exception("The number wqeqwewqq was negative")
             def ticketNamePattern = context.codebase.config.ticketNamePattern
             script.println("[JENKINS][DEBUG] Ticket name pattern has been fetched ${ticketNamePattern}")
             def changes = getChanges(context.workDir)
