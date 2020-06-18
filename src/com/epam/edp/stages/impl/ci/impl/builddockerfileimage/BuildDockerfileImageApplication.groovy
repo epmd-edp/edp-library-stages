@@ -28,10 +28,12 @@ class BuildDockerfileImageApplication {
         def resultTag
         script.openshift.withCluster() {
             script.openshift.withProject() {
-                if (!script.openshift.selector("buildconfig", "${buildconfigName}").exists())
-                    script.openshift.newBuild(context.codebase.imageBuildArgs)
-
+                script.println("[JENKINS][DEBUG] ----> buildconfigName ${buildconfigName}")
+                script.println("[JENKINS][DEBUG] ----> inside if ${context.codebase.imageBuildArgs}")
+                script.openshift.newBuild(context.codebase.imageBuildArgs)
+                script.println("[JENKINS][DEBUG] ----> after if ${buildconfigName}")
                 script.dir(context.codebase.deployableModuleDir) {
+                    script.println("[JENKINS][DEBUG] ----> inside context.codebase.deployableModuleDir ${context.codebase.deployableModuleDir}")
                     if ("${context.workDir}" != "${context.codebase.deployableModuleDir}") {
                         script.sh "cp ${context.workDir}/Dockerfile ${context.codebase.deployableModuleDir}/"
                     }
