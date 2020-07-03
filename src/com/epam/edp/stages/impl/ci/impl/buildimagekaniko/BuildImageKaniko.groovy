@@ -120,7 +120,7 @@ class BuildImageKaniko {
                     if (item.getName() != "Dockerfile")
                         context.platform.copyToPod("${context.workDir}/${item.getName()}", "/tmp/workspace/", buildconfigName, null, "init-kaniko")
                 }
-                context.platform.copyToPod("Dockerfile", "/tmp/workspace", buildconfigName, null, "init-kaniko")
+                context.platform.copyToPod("Dockerfile", "/tmp/workspace/target", buildconfigName, null, "init-kaniko")
 
                 while (context.platform.getObjectStatus("pod", buildconfigName).phase != "Succeeded") {
                     if (context.platform.getObjectStatus("pod", buildconfigName).phase == "Failed")
