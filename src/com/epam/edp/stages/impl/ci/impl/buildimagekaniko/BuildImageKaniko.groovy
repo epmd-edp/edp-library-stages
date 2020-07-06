@@ -136,7 +136,7 @@ class BuildImageKaniko {
                         "${context.git.branch}-${context.codebase.buildVersion}", context)
             }
             catch (Exception ex) {
-                script.error("[JENKINS][ERROR] Building image for ${context.codebase.name} failed")
+                script.error("[JENKINS][ERROR] Building image for ${context.codebase.name} failed ${ex}")
             }
             finally {
                 def podToDelete = "build-${context.codebase.name}-${context.git.branch.replaceAll("[^\\p{L}\\p{Nd}]+", "-")}-${script.BUILD_NUMBER.toInteger() - 1}"
