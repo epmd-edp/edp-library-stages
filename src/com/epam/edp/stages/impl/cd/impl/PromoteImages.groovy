@@ -25,6 +25,9 @@ class PromoteImages {
             script.openshift.withProject() {
                 context.job.codebasesList.each() { codebase ->
                     if ((codebase.name in context.job.applicationsToPromote) && (codebase.version != "No deploy") && (codebase.version != "noImageExists")) {
+                        if (codebase.name == "edp-component-operator") {
+                            return
+                        }
                         script.openshift.tag("${codebase.inputIs}:${codebase.version}",
                                 "${codebase.outputIs}:${codebase.version}")
 
