@@ -91,6 +91,14 @@ class BuildImageKaniko {
             script.sh("kubectl patch --type=merge cbis.${crApiGroup} ${cbisName} -p '{\"spec\":{\"tags\":${newCbisTags}}}'")
         }
     }
+    
+    def getLogsPod(name) {
+        def podOutput = script.sh(
+                script: "kubectl logs ${name}",
+                returnStdout: true
+        ).trim()
+        return podOutput
+    }
 
     void run(context) {
         def dockerfilePath = new FilePath(Jenkins.getInstance().getComputer(script.env['NODE_NAME']).getChannel(),
@@ -136,6 +144,17 @@ class BuildImageKaniko {
                 script.error("[JENKINS][ERROR] Building image for ${context.codebase.name} failed")
             }
             finally {
+                script.node("master") {
+                    def outPut = getLogsPod("build-${context.codebase.name}-${context.git.branch.replaceAll("[^\\p{L}\\p{Nd}]+", "-")}-${script.BUILD_NUMBER.toInteger()}")
+                    def outPutStart = outPut.indexOf("<!DOCTYPE html>")
+                    def outPutEnd = outPut.indexOf("</html>")
+                    script.println(outPut.substring(outPutStart, outPutEnd + 7))
+                    outPut = outPut.substring(outPutStart, outPutEnd + 7)
+                    def microReport = new File('microscanner-report.html')
+                    microReport.createNewFile()
+                    microReport.append(outPut)
+                    script.publishHTML([allowMissing: false, alwaysLinkToLastBuild: false, keepAll: false, reportDir: '', reportFiles: 'microscanner-report.html', reportName: 'Aqua Microscanner Report', reportTitles: ''])
+                }
                 def podToDelete = "build-${context.codebase.name}-${context.git.branch.replaceAll("[^\\p{L}\\p{Nd}]+", "-")}-${script.BUILD_NUMBER.toInteger() - 1}"
                 context.platform.deleteObject("pod", podToDelete, true)
             }
