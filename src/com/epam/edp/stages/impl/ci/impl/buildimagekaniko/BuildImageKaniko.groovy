@@ -91,6 +91,14 @@ class BuildImageKaniko {
             script.sh("kubectl patch --type=merge cbis.${crApiGroup} ${cbisName} -p '{\"spec\":{\"tags\":${newCbisTags}}}'")
         }
     }
+    
+    def getLogsPod(name, project) {
+        def podOutput = script.sh(
+                script: "kubectl logs ${name}",
+                returnStdout: true
+        ).trim()
+        return podOutput
+    }
 
     void run(context) {
         def dockerfilePath = new FilePath(Jenkins.getInstance().getComputer(script.env['NODE_NAME']).getChannel(),
@@ -136,9 +144,11 @@ class BuildImageKaniko {
                 script.error("[JENKINS][ERROR] Building image for ${context.codebase.name} failed")
             }
             finally {
+                script.println(getLogsPod("build-${context.codebase.name}-${context.git.branch.replaceAll("[^\\p{L}\\p{Nd}]+", "-")}-${script.BUILD_NUMBER.toInteger()}"))
                 def podToDelete = "build-${context.codebase.name}-${context.git.branch.replaceAll("[^\\p{L}\\p{Nd}]+", "-")}-${script.BUILD_NUMBER.toInteger() - 1}"
                 context.platform.deleteObject("pod", podToDelete, true)
             }
+
         }
     }
 }
