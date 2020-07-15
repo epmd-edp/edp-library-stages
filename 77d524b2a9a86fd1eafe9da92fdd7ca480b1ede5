@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b760cae6_74205e1b",
+        "filename": "src/com/epam/edp/stages/impl/ci/impl/helmverify/HelmVerifyApplicationLibrary.groovy",
+        "patchSetId": 16
+      },
+      "lineNbr": 26,
+      "author": {
+        "id": 1000006
+      },
+      "writtenOn": "2020-07-15T09:36:00Z",
+      "side": 1,
+      "message": "defaultHelmDownloadUrl",
+      "range": {
+        "startLine": 26,
+        "startChar": 93,
+        "endLine": 26,
+        "endChar": 108
+      },
+      "revId": "77d524b2a9a86fd1eafe9da92fdd7ca480b1ede5",
+      "serverId": "0350cb7f-c1b1-4710-a647-f6632dbafb3c",
+      "unresolved": true
+    }
+  ]
+}
