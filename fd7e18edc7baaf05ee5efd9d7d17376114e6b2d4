@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "416fcbea_1dfa4be0",
+        "filename": "src/com/epam/edp/stages/impl/ci/impl/helmverify/HelmVerifyApplicationLibrary.groovy",
+        "patchSetId": 12
+      },
+      "lineNbr": 29,
+      "author": {
+        "id": 1000006
+      },
+      "writtenOn": "2020-07-15T08:17:48Z",
+      "side": 1,
+      "message": "Let\u0027s use default version which defined in Job class",
+      "range": {
+        "startLine": 26,
+        "startChar": 0,
+        "endLine": 29,
+        "endChar": 16
+      },
+      "revId": "fd7e18edc7baaf05ee5efd9d7d17376114e6b2d4",
+      "serverId": "0350cb7f-c1b1-4710-a647-f6632dbafb3c",
+      "unresolved": true
+    }
+  ]
+}
