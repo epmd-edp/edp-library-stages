@@ -43,6 +43,11 @@ class BuildDockerfileImageApplication {
                 }
                 script.println("[JENKINS][DEBUG] Build config ${context.codebase.name} with result " +
                         "${buildconfigName}:${resultTag} has been completed")
+
+                script.println("openshift project ${script.openshift.project()}")
+                script.println("output is ${outputImagestreamName}")
+                script.println("resultTag ${resultTag}")
+                script.println("context.codebase.isTag ${context.codebase.isTag}")
                 script.openshift.tag("${script.openshift.project()}/${outputImagestreamName}@${resultTag}",
                         "${script.openshift.project()}/${outputImagestreamName}:${context.codebase.isTag}")
 
