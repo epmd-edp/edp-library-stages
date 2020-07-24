@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "84b78e80_cc7d1420",
+        "filename": "README.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 5,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2020-07-24T05:49:40Z",
+      "side": 1,
+      "message": "Pipeline",
+      "range": {
+        "startLine": 5,
+        "startChar": 79,
+        "endLine": 5,
+        "endChar": 86
+      },
+      "revId": "edafa136886b222d428dfaeb0235e094466952c2",
+      "serverId": "0350cb7f-c1b1-4710-a647-f6632dbafb3c",
+      "unresolved": true
+    }
+  ]
+}
