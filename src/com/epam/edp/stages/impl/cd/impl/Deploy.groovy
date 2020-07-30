@@ -123,8 +123,8 @@ class Deploy {
 
     def getRefspec(codebase) {
         return codebase.versioningType == "edp" ?
-            "refs/tags/build/${codebase.version}" :
-            "refs/tags/${codebase.version}"
+                "refs/tags/build/${codebase.version}" :
+                "refs/tags/${codebase.version}"
     }
 
     def cloneProject(context, codebase) {
@@ -175,10 +175,10 @@ class Deploy {
         ["Deployment", "DeploymentConfig"].each() { kind ->
             def workloads = script.sh(
                     script: "oc process ${isSvc ? "" : "-f"} ${deploymentTemplate} " +
-                    "${isSvc ? "" : "-p IMAGE_NAME=fake "}" +
-                    "${isSvc ? "" : "-p NAMESPACE=fake "}" +
-                    "${isSvc ? "-p SERVICE_VERSION=fake " : "-p APP_VERSION=fake "}" +
-                    "-o jsonpath='{range .items[?(@.kind==\"${kind}\")]}{.kind}{\"/\"}{.metadata.name}{\"\\n\"}{end}'",
+                            "${isSvc ? "" : "-p IMAGE_NAME=fake "}" +
+                            "${isSvc ? "" : "-p NAMESPACE=fake "}" +
+                            "${isSvc ? "-p SERVICE_VERSION=fake " : "-p APP_VERSION=fake "}" +
+                            "-o jsonpath='{range .items[?(@.kind==\"${kind}\")]}{.kind}{\"/\"}{.metadata.name}{\"\\n\"}{end}'",
                     returnStdout: true
             ).trim().tokenize("\n")
             workloads.each() {
@@ -204,6 +204,8 @@ class Deploy {
                 return
         }
 
+        applyCrds("${deployTemplatesPath}/crds")
+
         def imageName = codebase.inputIs ? codebase.inputIs : codebase.normalizedName
         def deploymentWorkloadsList = getDeploymentWorkloadsList("${deployTemplatesPath}/${templateName}.yaml", false)
         context.platform.deployCodebase(
@@ -215,6 +217,23 @@ class Deploy {
         deploymentWorkloadsList.each() { workload ->
             checkDeployment(context, workload.name, 'application', workload.kind)
         }
+    }
+
+    def applyCrds(path) {
+        script.println("[JENKINS][DEBUG] Applying CRD's to cluster")
+        File folder = new File(path)
+        if (!folder.exists()) {
+            script.println("[JENKINS][DEBUG] CRD directory doesn't exist. Skip applying CRD's to cluster")
+            return
+        }
+
+        for (file in folder.listFiles()) {
+            if (file.isFile()) {
+                script.println("[JENKINS][DEBUG] Test --> ${path}/${file.getName()}")
+                script.sh("oc apply -f ${path}/${file.getName()}")
+            }
+        }
+        script.println("[JENKINS][DEBUG] CRD's have been applied")
     }
 
     def checkTemplateExists(templateName, deployTemplatesPath) {
@@ -229,6 +248,7 @@ class Deploy {
     def deployCodebase(version, name, context, codebase) {
         def codebaseDir = "${script.WORKSPACE}/${RandomStringUtils.random(10, true, true)}/${name}"
         def deployTemplatesPath = "${codebaseDir}/${context.job.deployTemplatesDirectory}"
+        script.println("[JENKINS][WARNING] SEE HERE deployTemplatesPath --> ${deployTemplatesPath}")
         script.dir("${codebaseDir}") {
             if (!cloneProject(context, codebase)) {
                 if (codebase.name in context.job.applicationsToPromote)
