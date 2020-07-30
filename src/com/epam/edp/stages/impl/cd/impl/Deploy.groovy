@@ -229,6 +229,7 @@ class Deploy {
     def deployCodebase(version, name, context, codebase) {
         def codebaseDir = "${script.WORKSPACE}/${RandomStringUtils.random(10, true, true)}/${name}"
         def deployTemplatesPath = "${codebaseDir}/${context.job.deployTemplatesDirectory}"
+        script.println("[JENKINS][WARNING] SEE HERE deployTemplatesPath --> ${deployTemplatesPath}")
         script.dir("${codebaseDir}") {
             if (!cloneProject(context, codebase)) {
                 if (codebase.name in context.job.applicationsToPromote)
