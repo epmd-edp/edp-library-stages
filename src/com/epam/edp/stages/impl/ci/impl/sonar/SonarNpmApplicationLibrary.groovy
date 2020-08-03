@@ -51,7 +51,7 @@ class SonarNpmApplicationLibrary {
     def sendReport(sonarURL, codereviewAnalysisRunDir) {
         script.dir("${codereviewAnalysisRunDir}") {
             script.sonarToGerrit inspectionConfig: [baseConfig: [projectPath: "", sonarReportPath: "${codereviewAnalysisRunDir}/.scannerwork/sonar-report.json"], serverURL: "${sonarURL}"],
-                    notificationConfig: [commentedIssuesNotificationRecipient: 'NONE', negativeScoreNotificationRecipient: 'NONE'],
+                    notificationConfig: [noIssuesNotificationRecipient: 'NONE', commentedIssuesNotificationRecipient: 'OWNER', negativeScoreNotificationRecipient: 'OWNER'],
                     reviewConfig: [issueFilterConfig: [newIssuesOnly: false, changedLinesOnly: false, severity: 'CRITICAL']],
                     scoreConfig: [category: 'Sonar-Verified', noIssuesScore: +1, issuesScore: -1, issueFilterConfig: [severity: 'CRITICAL']]
         }
