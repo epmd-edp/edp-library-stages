@@ -23,22 +23,37 @@ class SonarGo {
 
     Script script
 
-    void run(context) {
-
+    def sendSonarScan(workDir, codebaseName) {
         def scannerHome = script.tool 'SonarQube Scanner'
-        script.dir("${context.workDir}") {
+        script.dir("${workDir}") {
             script.withSonarQubeEnv('Sonar') {
                 script.sh "${scannerHome}/bin/sonar-scanner " +
-                        "-Dsonar.projectKey=${context.codebase.name} " +
-                        "-Dsonar.projectName=${context.codebase.name} " +
+                        "-Dsonar.projectKey=${codebaseName} " +
+                        "-Dsonar.projectName=${codebaseName} " +
                         "-Dsonar.go.coverage.reportPaths=coverage.out "
+                        "-Dsonar.working.directory=${workDir} "
             }
-            script.timeout(time: 10, unit: 'MINUTES') {
-                def qualityGateResult = script.waitForQualityGate()
-                if (qualityGateResult.status != 'OK')
-                    script.error "[JENKINS][ERROR] Sonar quality gate check has been failed with status " +
-                            "${qualityGateResult.status}"
-            }
+
         }
+    }
+
+    def waitForQualityGate() {
+        script.timeout(time: 10, unit: 'MINUTES') {
+            def qualityGateResult = script.waitForQualityGate()
+            if (qualityGateResult.status != 'OK')
+                script.error "[JENKINS][ERROR] Sonar quality gate check has been failed with status " +
+                        "${qualityGateResult.status}"
+        }
+    }
+
+
+    void run(context) {
+        if (context.job.type == "codereview" && context.codebase.config.strategy != "import") {
+            sendSonarScan(context.workDir, "${context.codebase.name}:change-${context.git.changeNumber}-${context.git.patchsetNumber}")
+            waitForQualityGate()
+            return
+        }
+        sendSonarScan(context.workDir, context.codebase.name)
+        waitForQualityGate()
     }
 }
