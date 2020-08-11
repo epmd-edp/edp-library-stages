@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "317935a9_8b16bf2b",
+        "filename": "src/com/epam/edp/stages/impl/ci/impl/getversion/GetVersionPythonApplicationLibrary.groovy",
+        "patchSetId": 57
+      },
+      "lineNbr": 57,
+      "author": {
+        "id": 1000005
+      },
+      "writtenOn": "2020-08-11T10:00:12Z",
+      "side": 1,
+      "message": "remove",
+      "revId": "0721d62636c8cb56a39a17e45f8298c3a39890b1",
+      "serverId": "0350cb7f-c1b1-4710-a647-f6632dbafb3c",
+      "unresolved": true
+    }
+  ]
+}
