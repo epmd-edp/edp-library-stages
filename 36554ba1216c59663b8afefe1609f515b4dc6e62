@@ -1,0 +1,7 @@
+Verified+1: CI Jenkins
+Code-Review+2: Anton Tarianyk <anton_tarianyk@epam.com>
+Submitted-by: Mykola Marusenko <mykola_marusenko@epam.com>
+Submitted-at: Wed, 12 Aug 2020 11:53:28 +0000
+Reviewed-on: https://gerrit-oc-green-edp-cicd.delivery.aws.main.edp.projects.epam.com/c/edp-library-stages/+/4063
+Project: edp-library-stages
+Branch: refs/heads/master
