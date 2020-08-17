@@ -14,6 +14,8 @@ limitations under the License.*/
 
 package com.epam.edp.stages.impl.ci.impl.builddockerfileimage
 
+import com.epam.edp.stages.impl.ci.impl.codebaseiamgestream.CodebaseImageStreams
+
 class BuildDockerfileImageApplication {
     Script script
 
@@ -39,12 +41,18 @@ class BuildDockerfileImageApplication {
                     def buildResult = script.openshift.selector("bc", "${buildconfigName}").startBuild(
                             "--from-archive=${context.codebase.name}.tar",
                             "--wait=true")
-                    resultTag = buildResult.object().status.output.to.imageDigest
+//                    resultTag = buildResult.object().status.output.to.imageDigest
                 }
                 script.println("[JENKINS][DEBUG] Build config ${context.codebase.name} with result " +
                         "${buildconfigName}:${resultTag} has been completed")
-                script.openshift.tag("${script.openshift.project()}/${outputImagestreamName}@${resultTag}",
-                        "${script.openshift.project()}/${outputImagestreamName}:${context.codebase.isTag}")
+
+//                def dockerRegistryHost = context.platform.getJsonPathValue("edpcomponent", "docker-registry", ".spec.url")
+                def dockerRegistryHost = "docker-registry.default.svc:5000"
+                new CodebaseImageStreams(context, script)
+                        .UpdateOrCreateCodebaseImageStream(outputImagestreamName, "${dockerRegistryHost}/${outputImagestreamName}", context.codebase.isTag)
+
+               /* script.openshift.tag("${script.openshift.project()}/${outputImagestreamName}@${resultTag}",
+                        "${script.openshift.project()}/${outputImagestreamName}:${context.codebase.isTag}")*/
 
             }
         }
