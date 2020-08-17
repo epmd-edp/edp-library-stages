@@ -205,7 +205,9 @@ class Deploy {
         }
 
         def imageName = codebase.inputIs ? codebase.inputIs : codebase.normalizedName
+        script.println("[JENKSIN][INFO] imageName ${imageName}")
         def deploymentWorkloadsList = getDeploymentWorkloadsList("${deployTemplatesPath}/${templateName}.yaml", false)
+        script.println("[JENKSIN][INFO] deploymentWorkloadsList ${deploymentWorkloadsList}")
         context.platform.deployCodebase(
                 context.job.deployProject,
                 "${deployTemplatesPath}/${templateName}.yaml",

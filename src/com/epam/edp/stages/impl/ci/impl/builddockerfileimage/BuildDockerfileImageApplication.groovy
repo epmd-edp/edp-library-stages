@@ -14,6 +14,8 @@ limitations under the License.*/
 
 package com.epam.edp.stages.impl.ci.impl.builddockerfileimage
 
+import com.epam.edp.stages.impl.ci.impl.codebaseiamgestream.CodebaseImageStreams
+
 class BuildDockerfileImageApplication {
     Script script
 
@@ -21,10 +23,13 @@ class BuildDockerfileImageApplication {
         if (!script.fileExists("${context.workDir}/Dockerfile"))
             script.error "[JENKINS][ERROR] There is no Dockerfile in the root directory of the project ${context.codebase.name}. "
 
+
+        def dockerRegistryHost = "docker-registry.default.svc:5000"
+
         def buildconfigName = "${context.codebase.name}-dockerfile-${context.git.branch.replaceAll("[^\\p{L}\\p{Nd}]+", "-")}"
         def outputImagestreamName = "${context.codebase.name}-${context.git.branch.replaceAll("[^\\p{L}\\p{Nd}]+", "-")}"
         context.codebase.imageBuildArgs.push("--name=${buildconfigName}")
-        context.codebase.imageBuildArgs.push("--to=${outputImagestreamName}")
+        context.codebase.imageBuildArgs.push("--to=${dockerRegistryHost}/${script.openshift.project()}/${outputImagestreamName}:latest")
         def resultTag
         script.openshift.withCluster() {
             script.openshift.withProject() {
@@ -43,9 +48,12 @@ class BuildDockerfileImageApplication {
                 }
                 script.println("[JENKINS][DEBUG] Build config ${context.codebase.name} with result " +
                         "${buildconfigName}:${resultTag} has been completed")
+
+                new CodebaseImageStreams(context, script)
+                        .UpdateOrCreateCodebaseImageStream(outputImagestreamName, "${dockerRegistryHost}/${outputImagestreamName}", context.codebase.isTag)
+
                 script.openshift.tag("${script.openshift.project()}/${outputImagestreamName}@${resultTag}",
                         "${script.openshift.project()}/${outputImagestreamName}:${context.codebase.isTag}")
-
             }
         }
     }
