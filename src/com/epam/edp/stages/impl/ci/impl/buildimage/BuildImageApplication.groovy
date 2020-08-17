@@ -39,9 +39,15 @@ class BuildImageApplication {
                 }
                 script.println("[JENKINS][DEBUG] Build config ${context.codebase.name} with result " +
                         "${buildconfigName}:${resultTag} has been completed")
-                script.openshift.tag(
+
+                def dockerRegistryHost = "docker-registry.default.svc:5000"
+                def outputImagestreamName = "${context.codebase.name}-${context.git.branch.replaceAll("[^\\p{L}\\p{Nd}]+", "-")}"
+                new CodebaseImageStreams(context, script)
+                        .UpdateOrCreateCodebaseImageStream(outputImagestreamName, "${dockerRegistryHost}/${outputImagestreamName}", context.codebase.isTag)
+
+                /*script.openshift.tag(
                         "${script.openshift.project()}/${buildconfigName}@${resultTag}",
-                        "${script.openshift.project()}/${buildconfigName}:${context.codebase.isTag}")
+                        "${script.openshift.project()}/${buildconfigName}:${context.codebase.isTag}")*/
 
             }
         }
