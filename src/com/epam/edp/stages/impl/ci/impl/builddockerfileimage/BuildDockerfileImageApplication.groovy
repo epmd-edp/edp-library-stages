@@ -14,6 +14,8 @@ limitations under the License.*/
 
 package com.epam.edp.stages.impl.ci.impl.builddockerfileimage
 
+import com.epam.edp.stages.impl.ci.impl.codebaseiamgestream.CodebaseImageStreams
+
 class BuildDockerfileImageApplication {
     Script script
 
@@ -21,16 +23,20 @@ class BuildDockerfileImageApplication {
         if (!script.fileExists("${context.workDir}/Dockerfile"))
             script.error "[JENKINS][ERROR] There is no Dockerfile in the root directory of the project ${context.codebase.name}. "
 
-        def buildconfigName = "${context.codebase.name}-dockerfile-${context.git.branch.replaceAll("[^\\p{L}\\p{Nd}]+", "-")}"
-        def outputImagestreamName = "${context.codebase.name}-${context.git.branch.replaceAll("[^\\p{L}\\p{Nd}]+", "-")}"
-        context.codebase.imageBuildArgs.push("--name=${buildconfigName}")
-        context.codebase.imageBuildArgs.push("--to=${outputImagestreamName}")
-        def resultTag
         script.openshift.withCluster() {
             script.openshift.withProject() {
-                if (!script.openshift.selector("buildconfig", "${buildconfigName}").exists())
-                    script.openshift.newBuild(context.codebase.imageBuildArgs)
 
+                def dockerRegistryHost = "docker-registry.default.svc:5000"
+                def buildconfigName = "${context.codebase.name}-dockerfile-${context.git.branch.replaceAll("[^\\p{L}\\p{Nd}]+", "-")}"
+                def outputImagestreamName = "${context.codebase.name}-${context.git.branch.replaceAll("[^\\p{L}\\p{Nd}]+", "-")}"
+                context.codebase.imageBuildArgs.push("--name=${buildconfigName}")
+                context.codebase.imageBuildArgs.push("--to=${dockerRegistryHost}/${script.openshift.project()}/${outputImagestreamName}:${context.codebase.isTag}")
+                def resultTag
+
+                /*if (!script.openshift.selector("buildconfig", "${buildconfigName}").exists())
+                    script.openshift.newBuild(context.codebase.imageBuildArgs)*/
+
+                script.openshift.newBuild(context.codebase.imageBuildArgs)
                 script.dir(context.codebase.deployableModuleDir) {
                     if ("${context.workDir}" != "${context.codebase.deployableModuleDir}") {
                         script.sh "cp ${context.workDir}/Dockerfile ${context.codebase.deployableModuleDir}/"
@@ -43,9 +49,9 @@ class BuildDockerfileImageApplication {
                 }
                 script.println("[JENKINS][DEBUG] Build config ${context.codebase.name} with result " +
                         "${buildconfigName}:${resultTag} has been completed")
-                script.openshift.tag("${script.openshift.project()}/${outputImagestreamName}@${resultTag}",
-                        "${script.openshift.project()}/${outputImagestreamName}:${context.codebase.isTag}")
 
+                new CodebaseImageStreams(context, script)
+                        .UpdateOrCreateCodebaseImageStream(outputImagestreamName, "${dockerRegistryHost}/${outputImagestreamName}", context.codebase.isTag)
             }
         }
     }
