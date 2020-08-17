@@ -23,7 +23,8 @@ class BuildDockerfileImageAny {
 
     void run(context) {
         context.codebase.imageBuildArgs = []
-        context.codebase.imageBuildArgs.push("--binary=true")
+        def dockerRegistryHost = "docker-registry.default.svc:5000"
+        context.codebase.imageBuildArgs.push("--binary=true --to-docker=true --to=${dockerRegistryHost}")
         new BuildDockerfileImageApplication(script: script).run(context)
     }
 }
