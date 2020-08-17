@@ -14,6 +14,8 @@ limitations under the License.*/
 
 package com.epam.edp.stages.impl.ci.impl.builddockerfileimage
 
+import com.epam.edp.stages.impl.ci.impl.codebaseiamgestream.CodebaseImageStreams
+
 class BuildDockerfileImageApplication {
     Script script
 
@@ -43,6 +45,17 @@ class BuildDockerfileImageApplication {
                 }
                 script.println("[JENKINS][DEBUG] Build config ${context.codebase.name} with result " +
                         "${buildconfigName}:${resultTag} has been completed")
+
+                script.println("[JENKINS][DEBUG] script.openshift.project() ${script.openshift.project()}")
+                def dockerRegistryHost = context.platform.getJsonPathValue("edpcomponent", "docker-registry", ".spec.url")
+                if (!dockerRegistryHost) {
+                    script.error("[JENKINS][ERROR] Couldn't get docker registry server")
+                }
+                def resultImageName = "${context.codebase.name}-${context.git.branch.replaceAll("[^\\p{L}\\p{Nd}]+", "-")}"
+
+                new CodebaseImageStreams(context)
+                        .UpdateOrCreateCodebaseImageStream(resultImageName, "${dockerRegistryHost}/${resultImageName}", context.codebase.isTag)
+
                 script.openshift.tag("${script.openshift.project()}/${outputImagestreamName}@${resultTag}",
                         "${script.openshift.project()}/${outputImagestreamName}:${context.codebase.isTag}")
 
