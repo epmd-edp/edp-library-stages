@@ -14,6 +14,8 @@ limitations under the License.*/
 
 package com.epam.edp.stages.impl.ci.impl.buildimage
 
+import com.epam.edp.stages.impl.ci.impl.codebaseiamgestream.CodebaseImageStreams
+
 class BuildImageApplication {
     Script script
 
@@ -39,10 +41,11 @@ class BuildImageApplication {
                 }
                 script.println("[JENKINS][DEBUG] Build config ${context.codebase.name} with result " +
                         "${buildconfigName}:${resultTag} has been completed")
-                script.openshift.tag(
-                        "${script.openshift.project()}/${buildconfigName}@${resultTag}",
-                        "${script.openshift.project()}/${buildconfigName}:${context.codebase.isTag}")
 
+                def dockerRegistryHost = "docker-registry.default.svc:5000"
+                def outputImagestreamName = "${context.codebase.name}-${context.git.branch.replaceAll("[^\\p{L}\\p{Nd}]+", "-")}"
+                new CodebaseImageStreams(context, script)
+                        .UpdateOrCreateCodebaseImageStream(outputImagestreamName, "${dockerRegistryHost}/${outputImagestreamName}", context.codebase.isTag)
             }
         }
     }
