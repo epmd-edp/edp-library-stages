@@ -14,6 +14,8 @@ limitations under the License.*/
 
 package com.epam.edp.stages.impl.ci.impl.builddockerfileimage
 
+import com.epam.edp.stages.impl.ci.impl.codebaseiamgestream.CodebaseImageStreams
+
 class BuildDockerfileImageApplication {
     Script script
 
@@ -28,8 +30,8 @@ class BuildDockerfileImageApplication {
         def resultTag
         script.openshift.withCluster() {
             script.openshift.withProject() {
-                if (!script.openshift.selector("buildconfig", "${buildconfigName}").exists())
-                    script.openshift.newBuild(context.codebase.imageBuildArgs)
+               /* if (!script.openshift.selector("buildconfig", "${buildconfigName}").exists())
+                    script.openshift.newBuild(context.codebase.imageBuildArgs)*/
 
                 script.dir(context.codebase.deployableModuleDir) {
                     if ("${context.workDir}" != "${context.codebase.deployableModuleDir}") {
@@ -43,8 +45,14 @@ class BuildDockerfileImageApplication {
                 }
                 script.println("[JENKINS][DEBUG] Build config ${context.codebase.name} with result " +
                         "${buildconfigName}:${resultTag} has been completed")
-                script.openshift.tag("${script.openshift.project()}/${outputImagestreamName}@${resultTag}",
-                        "${script.openshift.project()}/${outputImagestreamName}:${context.codebase.isTag}")
+
+//                def dockerRegistryHost = context.platform.getJsonPathValue("edpcomponent", "docker-registry", ".spec.url")
+                def dockerRegistryHost = "docker-registry.default.svc:5000"
+                new CodebaseImageStreams(context, script)
+                        .UpdateOrCreateCodebaseImageStream(outputImagestreamName, "${dockerRegistryHost}/${outputImagestreamName}", context.codebase.isTag)
+
+               /* script.openshift.tag("${script.openshift.project()}/${outputImagestreamName}@${resultTag}",
+                        "${script.openshift.project()}/${outputImagestreamName}:${context.codebase.isTag}")*/
 
             }
         }
