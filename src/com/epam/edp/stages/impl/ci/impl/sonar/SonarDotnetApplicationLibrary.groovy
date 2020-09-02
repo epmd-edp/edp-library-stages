@@ -62,12 +62,12 @@ class SonarDotnetApplicationLibrary {
         script.dir("${codereviewAnalysisRunDir}") {
                  script.withSonarQubeEnv('Sonar') {
                      script.sh """
-                     dotnet ${scannerHome}/SonarScanner.MSBuild.dll begin /k:${sonarProjectName} \
+                     dotnet-sonarscanner begin /k:${sonarProjectName} \
                      /k:${sonarProjectName} \
                      /n:${sonarProjectName} \
                      /d:sonar.cs.opencover.reportsPaths=${codereviewAnalysisRunDir}/*Tests*/*.xml
                      dotnet build ${buildTool.sln_filename}
-                     dotnet ${scannerHome}/SonarScanner.MSBuild.dll end
+                     dotnet-sonarscanner end
                  """
                  }
         }
