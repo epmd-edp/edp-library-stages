@@ -85,7 +85,9 @@ class SonarDotnetApplicationLibrary {
 
     void run(context) {
         def codereviewAnalysisRunDir = context.workDir
-        def scannerHome = script.tool 'SonarScannerMSBuild'
+        script.println("[JENKINS][DEBUG] mm-framework ${context.codebase.config.framework}")
+        def scannerHome = context.codebase.config.framework == "netcore" ? script.tool 'SonarScannerMSBuild' : "/home/jenkins/.dotnet/tools/dotnet-sonarscanner"
+        script.println("[JENKINS][DEBUG] scannerHome-framework ${scannerHome}")
         if (context.job.type == "codereview") {
             runSonarScannerDependsOnPlatformAndStrategy(context, System.getenv("PLATFORM_TYPE"), codereviewAnalysisRunDir, scannerHome)
         } else {
