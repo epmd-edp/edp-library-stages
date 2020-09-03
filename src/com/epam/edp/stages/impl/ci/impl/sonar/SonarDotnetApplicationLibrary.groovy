@@ -62,12 +62,12 @@ class SonarDotnetApplicationLibrary {
         script.dir("${codereviewAnalysisRunDir}") {
                  script.withSonarQubeEnv('Sonar') {
                      script.sh """
-                     dotnet-sonarscanner begin /k:${sonarProjectName} \
+                     ${scannerHome} begin /k:${sonarProjectName} \
                      /k:${sonarProjectName} \
                      /n:${sonarProjectName} \
                      /d:sonar.cs.opencover.reportsPaths=${codereviewAnalysisRunDir}/*Tests*/*.xml
                      dotnet build ${buildTool.sln_filename}
-                     dotnet-sonarscanner end
+                     ${scannerHome} end
                  """
                  }
         }
@@ -85,7 +85,10 @@ class SonarDotnetApplicationLibrary {
 
     void run(context) {
         def codereviewAnalysisRunDir = context.workDir
-        def scannerHome = script.tool 'SonarScannerMSBuild'
+        def scannerHomePath = script.tool 'SonarScannerMSBuild'
+        script.println("[JENKINS][DEBUG] mm-framework ${context.codebase.config.framework}")
+        def scannerHome = context.codebase.config.framework == "netcore" ? "dotnet ${scannerHomePath}/SonarScanner.MSBuild.dll" : "/home/jenkins/.dotnet/tools/dotnet-sonarscanner"
+        script.println("[JENKINS][DEBUG] scannerHome-framework ${scannerHome}")
         if (context.job.type == "codereview") {
             runSonarScannerDependsOnPlatformAndStrategy(context, System.getenv("PLATFORM_TYPE"), codereviewAnalysisRunDir, scannerHome)
         } else {
