@@ -14,4 +14,6 @@ realization, and redefinition of the user stages. In such a case, the priority g
 
 ### Related Articles
 - [EDP Library Pipelines](https://github.com/epmd-edp/edp-library-pipelines/blob/master/README.md#edp-library-pipelines)
-- [Customize CI Pipeline](https://github.com/epmd-edp/edp-library-pipelines/blob/master/documentation/customize_ci_pipeline.md#customize-ci-pipeline)
+- [Customize CI Pipeline](https://github.com/epmd-edp/admin-console/blob/master/documentation/cicd_customization/customize_ci_pipeline.md#customize-ci-pipeline)
+
+>_**NOTE**: To get more accurate information on the CI/CD customization, please refer to the [admin-console](https://github.com/epmd-edp/admin-console/tree/master#edp-admin-console) repository._
