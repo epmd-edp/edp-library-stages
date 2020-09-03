@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2cb20dfa_31fe6517",
+        "filename": "src/com/epam/edp/stages/impl/cd/impl/Deploy.groovy",
+        "patchSetId": 4
+      },
+      "lineNbr": 267,
+      "author": {
+        "id": 1000005
+      },
+      "writtenOn": "2020-09-03T15:06:23Z",
+      "side": 1,
+      "message": "may we reuse approach with edp-components from 2.5 release ?",
+      "revId": "7674bd852cd845007c43c186bcdabe3ec43bcfa1",
+      "serverId": "0350cb7f-c1b1-4710-a647-f6632dbafb3c",
+      "unresolved": true
+    }
+  ]
+}
