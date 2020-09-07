@@ -21,6 +21,14 @@ import org.apache.commons.lang.RandomStringUtils
 class Deploy {
     Script script
 
+    def checkOpenshiftTemplateExists(context, templateName) {
+        if (!script.openshift.selector("template", templateName).exists()) {
+            script.println("[JENKINS][WARNING] Template which called ${templateName} doesn't exist in ${context.job.ciProject} namespace")
+            return false
+        }
+        return true
+    }
+
     def getBuildUserFromLog(context) {
         def jenkinsCred = "admin:${context.jenkins.token}".bytes.encodeBase64().toString()
         def jobUrl = "${context.job.buildUrl}".replaceFirst("${context.job.jenkinsUrl}", '')
@@ -31,14 +39,6 @@ class Deploy {
                 script: "#!/bin/sh -e\necho \"${response.content}\" | grep \"Approved by\" -m 1 | awk {'print \$3'}",
                 returnStdout: true
         ).trim()
-    }
-
-    def checkOpenshiftTemplateExists(context, templateName) {
-        if (!script.openshift.selector("template", templateName).exists()) {
-            script.println("[JENKINS][WARNING] Template which called ${templateName} doesn't exist in ${context.job.ciProject} namespace")
-            return false
-        }
-        return true
     }
 
     def deployConfigMaps(codebaseDir, name, context) {
@@ -85,35 +85,6 @@ class Deploy {
         return true
     }
 
-    def getNumericVersion(context, codebase) {
-        def hash = script.sh(
-                script: "oc -n ${context.job.ciProject} get is ${codebase.inputIs} -o jsonpath=\'{@.spec.tags[?(@.name==\"${codebase.version}\")].from.name}\'",
-                returnStdout: true
-        ).trim()
-        def tags = script.sh(
-                script: "oc -n ${context.job.ciProject} get is ${codebase.inputIs} -o jsonpath=\'{@.spec.tags[?(@.from.name==\"${hash}\")].name}\'",
-                returnStdout: true
-        ).trim().tokenize()
-        tags.removeAll { it == "latest" }
-        tags.removeAll { it == "stable" }
-        script.println("[JENKINS][DEBUG] Codebase ${codebase.name} has the following numeric tag, which corresponds to tag ${codebase.version} - ${tags}")
-        switch (tags.size()) {
-            case 0:
-                script.println("[JENKINS][WARNING] Codebase ${codebase.name} has no numeric version for tag ${codebase.version}\r\n" +
-                        "[JENKINS][WARNING] Deploy will be skipped")
-                return null
-                break
-            case 1:
-                return (tags[0])
-                break
-            default:
-                script.println("[JENKINS][WARNING] Codebase ${codebase.name} has more than one numeric tag for tag ${codebase.version}\r\n" +
-                        "[JENKINS][WARNING] We will use the first one")
-                return (tags[0])
-                break
-        }
-    }
-
     def getRepositoryPath(codebase) {
         if (codebase.strategy == "import") {
             return codebase.gitProjectPath
@@ -123,8 +94,8 @@ class Deploy {
 
     def getRefspec(codebase) {
         return codebase.versioningType == "edp" ?
-            "refs/tags/build/${codebase.version}" :
-            "refs/tags/${codebase.version}"
+                "refs/tags/build/${codebase.version}" :
+                "refs/tags/${codebase.version}"
     }
 
     def cloneProject(context, codebase) {
@@ -175,10 +146,10 @@ class Deploy {
         ["Deployment", "DeploymentConfig"].each() { kind ->
             def workloads = script.sh(
                     script: "oc process ${isSvc ? "" : "-f"} ${deploymentTemplate} " +
-                    "${isSvc ? "" : "-p IMAGE_NAME=fake "}" +
-                    "${isSvc ? "" : "-p NAMESPACE=fake "}" +
-                    "${isSvc ? "-p SERVICE_VERSION=fake " : "-p APP_VERSION=fake "}" +
-                    "-o jsonpath='{range .items[?(@.kind==\"${kind}\")]}{.kind}{\"/\"}{.metadata.name}{\"\\n\"}{end}'",
+                            "${isSvc ? "" : "-p IMAGE_NAME=fake "}" +
+                            "${isSvc ? "" : "-p NAMESPACE=fake "}" +
+                            "${isSvc ? "-p SERVICE_VERSION=fake " : "-p APP_VERSION=fake "}" +
+                            "-o jsonpath='{range .items[?(@.kind==\"${kind}\")]}{.kind}{\"/\"}{.metadata.name}{\"\\n\"}{end}'",
                     returnStdout: true
             ).trim().tokenize("\n")
             workloads.each() {
@@ -189,6 +160,46 @@ class Deploy {
             }
         }
         return deploymentWorkloadsList
+    }
+
+    def deployCodebaseHelmTemplate(context, codebase, deployTemplatesPath) {
+        def templateName = "Chart"
+        if (!checkTemplateExists(templateName, deployTemplatesPath)) {
+            return
+        }
+
+        if (codebase.need_database)
+            context.platform.addSccToUser(codebase.name,"anyuid", context.job.deployProject)
+
+        codebase.cdPipelineName = context.job.pipelineName
+        codebase.cdPipelineStageName = context.job.stageName
+
+        def imageName = codebase.inputIs ? codebase.inputIs : codebase.normalizedName
+        def fullImageName = context.platform.createFullImageName(context.environment.config.dockerRegistryHost,
+                context.job.ciProject,imageName)
+        def parametersMap = [
+                ['name': 'namespace', 'value': "${context.job.deployProject}"],
+                ['name': 'cdPipelineName', 'value': "${codebase.cdPipelineName}"],
+                ['name': 'cdPipelineStageName', 'value': "${codebase.cdPipelineStageName}"],
+                ['name': 'image.name', 'value': fullImageName],
+                ['name': 'image.version', 'value': "${codebase.version}"],
+                ['name': 'database.required', 'value': "${codebase.db_kind != "" ? true : false}"],
+                ['name': 'database.version', 'value': "${codebase.db_version}"],
+                ['name': 'database.capacity', 'value': "${codebase.db_capacity}"],
+                ['name': 'database.database.storageClass', 'value': "${codebase.db_storage}"],
+                ['name': 'ingress.path', 'value': "${codebase.route_path}"],
+                ['name': 'ingress.site', 'value': "${codebase.route_site}"],
+                ['name': 'dnsWildcard', 'value': "${context.job.dnsWildcard}"],
+        ]
+
+        context.platform.deployCodebaseHelm(
+                context.job.deployProject,
+                "${deployTemplatesPath}",
+                codebase,
+                fullImageName,
+                context.job.deployTimeout,
+                parametersMap
+        )
     }
 
     def deployCodebaseTemplate(context, codebase, deployTemplatesPath) {
@@ -226,6 +237,16 @@ class Deploy {
         return true
     }
 
+    def getDockerRegistryInfo(context) {
+        try {
+            return context.platform.getJsonPathValue("edpcomponents", "docker-registry", ".spec.url")
+        }
+        catch (Exception ex) {
+            script.println("[JENKINS][WARNING] Getting docker registry info failed.Reason:\r\n ${ex}")
+            return null
+        }
+    }
+
     def deployCodebase(version, name, context, codebase) {
         def codebaseDir = "${script.WORKSPACE}/${RandomStringUtils.random(10, true, true)}/${name}"
         def deployTemplatesPath = "${codebaseDir}/${context.job.deployTemplatesDirectory}"
@@ -237,11 +258,20 @@ class Deploy {
             }
             deployConfigMaps(codebaseDir, name, context)
             try {
-                deployCodebaseTemplate(context, codebase, deployTemplatesPath)
+                switch (codebase.deploymentScript) {
+                    case "openshift-template":
+                        deployCodebaseTemplate(context, codebase, deployTemplatesPath)
+                        break
+                    case "helm-chart":
+                        deployCodebaseHelmTemplate(context, codebase, deployTemplatesPath)
+                        break
+                }
             }
             catch (Exception ex) {
                 script.unstable("[JENKINS][WARNING] Deployment of codebase ${name} has been failed. Reason - ${ex}.")
                 script.currentBuild.setResult('UNSTABLE')
+                if (codebase.deploymentScript == "helm-chart")
+                    context.platform.rollbackDeployedCodebaseHelm(codebase.name, context.job.deployProject)
                 if (codebase.name in context.job.applicationsToPromote)
                     context.job.applicationsToPromote.remove(codebase.name)
             }
@@ -260,15 +290,7 @@ class Deploy {
     void run(context) {
         script.openshift.withCluster() {
             context.platform.createProjectIfNotExist(context.job.deployProject, context.job.edpName)
-            def secretSelector = context.platform.getObjectList("secret")
-
-            secretSelector.withEach { secret ->
-                def sharedSecretName = secret.name().split('/')[1]
-                def secretName = sharedSecretName.replace(context.job.sharedSecretsMask, '')
-                if (sharedSecretName =~ /${context.job.sharedSecretsMask}/)
-                    if (!context.platform.checkObjectExists('secrets', secretName))
-                        context.platform.copySharedSecrets(sharedSecretName, secretName, context.job.deployProject)
-            }
+            context.platform.copySharedSecrets(context.job.sharedSecretsMask, context.job.deployProject)
 
             if (context.job.buildUser == null || context.job.buildUser == "")
                 context.job.buildUser = getBuildUserFromLog(context)
@@ -332,6 +354,7 @@ class Deploy {
                     script.sh("oc adm policy add-scc-to-user anyuid -z ${codebase.name} -n ${context.job.deployProject}")
                     script.sh("oc adm policy add-role-to-user view system:serviceaccount:${context.job.deployProject}:${codebase.name} -n ${context.job.deployProject}")
 
+                    context.environment.config.dockerRegistryHost = getDockerRegistryInfo(context)
                     parallelCodebases["${codebase.name}"] = {
                         deployCodebase(codebase.version, codebase.name, context, codebase)
                     }
