@@ -288,15 +288,21 @@ class Deploy {
     }
 
     void run(context) {
+        script.println("1")
         context.platform.createProjectIfNotExist(context.job.deployProject, context.job.edpName)
+        script.println("2")
+
         context.platform.copySharedSecrets(context.job.sharedSecretsMask, context.job.deployProject)
+        script.println("3")
 
         if (context.job.buildUser == null || context.job.buildUser == "")
             context.job.buildUser = getBuildUserFromLog(context)
+        script.println("4")
 
         if (context.job.buildUser != null && context.job.buildUser != "") {
             context.platform.createRoleBinding(context.job.buildUser, "admin", context.job.deployProject)
         }
+        script.println("5")
 
         while (!context.job.servicesList.isEmpty()) {
             def parallelServices = [:]
@@ -321,6 +327,7 @@ class Deploy {
 
             script.parallel parallelServices
         }
+        script.println("6")
 
         def deployCodebasesList = context.job.codebasesList.clone()
         while (!deployCodebasesList.isEmpty()) {
