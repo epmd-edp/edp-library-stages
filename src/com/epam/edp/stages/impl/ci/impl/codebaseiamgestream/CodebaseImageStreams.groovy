@@ -64,15 +64,16 @@ class CodebaseImageStreams {
     }
 
     def saveCbisTemplateFile(template) {
+        script.println("[JENKINS][DEBUG] Save CodebaseImageStream template to file system.")
         def cbisTemplateFilePath
         if (script.env['NODE_NAME'].equals("master")) {
-            cbisTemplateFilePath = new FilePath(new File("${this.context.workDir}/cbis-template.json"))
+            script.println("[JENKINS][DEBUG] master ${this.context.workDir}/cbis-template.json")
+            new FilePath(new File("${this.context.workDir}/cbis-template.json")).write(JsonOutput.toJson(template), null)
+            return cbisTemplateFilePath
         }
-        else {
-            cbisTemplateFilePath = new FilePath(Jenkins.getInstance().getComputer(script.env['NODE_NAME']).getChannel(),
-                    "${this.context.workDir}/cbis-template.json")
-        }
-        cbisTemplateFilePath.write(JsonOutput.toJson(template), null)
+        script.println("[JENKINS][DEBUG] not master ${this.context.workDir}/cbis-template.json")
+        new FilePath(Jenkins.getInstance().getComputer(script.env['NODE_NAME']).getChannel(),
+                "${this.context.workDir}/cbis-template.json").write(JsonOutput.toJson(template), null)
         return cbisTemplateFilePath
     }
 }
