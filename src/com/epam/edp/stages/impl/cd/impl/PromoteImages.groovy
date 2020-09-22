@@ -15,6 +15,7 @@ limitations under the License.*/
 package com.epam.edp.stages.impl.cd.impl
 
 import com.epam.edp.stages.impl.cd.Stage
+import com.epam.edp.stages.impl.ci.impl.codebaseiamgestream.CodebaseImageStreams
 
 @Stage(name = "promote-images")
 class PromoteImages {
@@ -27,6 +28,14 @@ class PromoteImages {
                     if ((codebase.name in context.job.applicationsToPromote) && (codebase.version != "No deploy") && (codebase.version != "noImageExists")) {
                         script.openshift.tag("${codebase.inputIs}:${codebase.version}",
                                 "${codebase.outputIs}:${codebase.version}")
+
+                        def dockerRegistryHost = context.platform.getJsonPathValue("edpcomponent", "docker-registry", ".spec.url")
+                        if (!dockerRegistryHost) {
+                            script.error("[JENKINS][ERROR] Couldn't get docker registry server")
+                        }
+
+                        new CodebaseImageStreams(context, script)
+                                .UpdateOrCreateCodebaseImageStream(codebase.outputIs, "${dockerRegistryHost}/${codebase.outputIs}", codebase.version)
 
                         script.println("[JENKINS][INFO] Image ${codebase.inputIs}:${codebase.version} has been promoted to ${codebase.outputIs}")
                     }
