@@ -85,8 +85,16 @@ class BuildImageKaniko {
                 def deployableModuleDirFilepath = new FilePath(Jenkins.getInstance().getComputer(script.env['NODE_NAME']).getChannel(), "${context.workDir}")
                 script.println("[JENKINS][DEBUG] Files to copy to kaniko - ${deployableModuleDirFilepath.list()}")
                 deployableModuleDirFilepath.list().each() { item ->
-                    if (item.getName() != "Dockerfile")
-                        context.platform.copyToPod("${context.workDir}/${item.getName()}", "/tmp/workspace/", buildconfigName, null, "init-kaniko")
+                    if (item.getName() == "Dockerfile") {
+                        return
+                    }
+
+                    if (context.codebase.build_tool == "maven" && item.getName() == "target") {
+                        script.println("[JENKINS][DEBUG] JAVA MAVEN ${context.workDir}/${item.getName()}/*.jar")
+                        context.platform.copyToPod("${context.workDir}/${item.getName()}/*.jar", "/tmp/workspace/", buildconfigName, null, "init-kaniko")
+                    }
+
+                    context.platform.copyToPod("${context.workDir}/${item.getName()}", "/tmp/workspace/", buildconfigName, null, "init-kaniko")
                 }
                 context.platform.copyToPod("Dockerfile", "/tmp/workspace", buildconfigName, null, "init-kaniko")
 
