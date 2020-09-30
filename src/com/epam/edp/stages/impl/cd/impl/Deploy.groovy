@@ -285,6 +285,62 @@ class Deploy {
         return tempEntityList
     }
 
+    void deployServices(chartmuseumUrl, services, dnsWildCard, ns) {
+        script.println("[JENKINS][DEBUG] Start service deploying.")
+
+        script.sh("helm repo add epamedp ${chartmuseumUrl}")
+
+        services.each() { s ->
+            script.sh("helm -n ${ns} install ${s.name} ${s.url} ${getServiceHelmCommand(s, dnsWildCard, ns)}")
+        }
+    }
+
+    def getServiceHelmCommand(service, dnsWildcard, ns) {
+        def postgresUsername = "postgres"
+        def postgresPass = RandomStringUtils.random(10, true, true)
+        def rabbitmqUsername = "admin"
+        def rabbitmqPass = RandomStringUtils.random(10, true, true)
+        createSecret(ns, "postgres-admin", ['username': postgresUsername, 'password': postgresPass])
+        createSecret(ns, "rabbitmq-admin", ['username': rabbitmqUsername, 'password': rabbitmqPass])
+
+        return [
+                "postgres": new StringBuilder()
+                        .append("--set dbName=${service.name} ")
+                        .append("--set memoryLimit=512Mi ")
+                        .append("--set pgPassword=${postgresPass} ")
+                        .append("--set pgUsername=${postgresUsername} ")
+                        .append("--set serviceImage=postgres ")
+                        .append("--set serviceName=${service.name} ")
+                        .append("--set serviceVersion=${service.version} ")
+                        .append("--set port=5432 ")
+                        .append("--set storageSize=10Gi ")
+                        .append("--set storageClass=gp2").toString(),
+                "rabbitmq": new StringBuilder()
+                        .append("--set serviceImage=rabbitmq ")
+                        .append("--set serviceName=${service.name} ")
+                        .append("--set serviceVersion=${service.version} ")
+                        .append("--set username=${rabbitmqUsername} ")
+                        .append("--set password=${rabbitmqPass} ")
+                        .append("--set storageSize=10Gi ")
+                        .append("--set storageClass=gp2 ")
+                        .append("--set containerListenerPort=5672 ")
+                        .append("--set containerManagementPort=15672 ")
+                        .append("--set memoryLimit=512Mi ")
+                        .append("--set platform=${System.getenv("PLATFORM_TYPE")} ")
+                        .append("--set namespace=${ns} ")
+                        .append("--set dnsWildCard=${dnsWildcard} ").toString()
+        ][service.name]
+    }
+
+    def createSecret(namespace, name, params) {
+        script.println("[JENKINS][DEBUG] Create secret: ${name}")
+        def command = "oc create secret generic ${name} -n ${namespace} "
+        params.each {
+            command += " --from-literal=${it.key}=${it.value}"
+        }
+        script.sh(command)
+    }
+
     void run(context) {
         context.platform.createProjectIfNotExist(context.job.deployProject, context.job.edpName)
 
@@ -297,29 +353,8 @@ class Deploy {
             context.platform.createRoleBinding(context.job.buildUser, "admin", context.job.deployProject)
         }
 
-        while (!context.job.servicesList.isEmpty()) {
-            def parallelServices = [:]
-            def tempServiceList = getNElements(context.job.servicesList, context.job.maxOfParallelDeployServices)
-
-            tempServiceList.each() { service ->
-                if (!checkOpenshiftTemplateExists(context, service.name))
-                    return
-
-                context.platform.addSccToUser(service.name, 'anyuid', context.job.deployProject)
-
-                def deploymentWorkloadsList = getDeploymentWorkloadsList(service.name, true)
-                parallelServices["${service.name}"] = {
-                    script.sh("oc -n ${context.job.ciProject} process ${service.name} " +
-                            "-p SERVICE_VERSION=${service.version} " +
-                            "-o json | oc -n ${context.job.deployProject} apply -f -")
-                    deploymentWorkloadsList.each() { workload ->
-                        checkDeployment(context, workload.name, 'service', workload.kind)
-                    }
-                }
-            }
-
-            script.parallel parallelServices
-        }
+        def chartmuseumUrl = context.job.getParameterValue("CHARTMUSEUM_URL", "https://chartmuseum-oc-green-edp-cicd.delivery.aws.main.edp.projects.epam.com")
+        deployServices(chartmuseumUrl, context.job.servicesList, context.job.dnsWildcard, context.job.ciProject)
 
         def deployCodebasesList = context.job.codebasesList.clone()
         while (!deployCodebasesList.isEmpty()) {
@@ -350,7 +385,7 @@ class Deploy {
                     return
 
                 context.platform.addSccToUser(codebase.name, 'anyuid', context.job.deployProject)
-                context.platform.createRoleBinding("system:serviceaccount:${context.job.deployProject}", "view",context.job.deployProject)
+                context.platform.createRoleBinding("system:serviceaccount:${context.job.deployProject}", "view", context.job.deployProject)
 
                 context.environment.config.dockerRegistryHost = getDockerRegistryInfo(context)
                 parallelCodebases["${codebase.name}"] = {
