@@ -285,6 +285,50 @@ class Deploy {
         return tempEntityList
     }
 
+    void deployServices(chartmuseumUrl, services, ns) {
+        script.println("[JENKINS][DEBUG] Start service deploying.")
+        script.println("[JENKINS][DEBUG] chartmuseumUrl ${chartmuseumUrl}.")
+        script.println("[JENKINS][DEBUG] Services ${services}.")
+        script.println("[JENKINS][DEBUG] ns ${ns}.")
+
+        script.sh("helm repo add epamedp ${chartmuseumUrl}")
+
+        services.each() { s ->
+            script.println("[JENKINS][DEBUG] Service ${s}.")
+            script.sh("helm -n ${ns} install ${s.name} ${s.url} ${getServiceHelmCommand(s)}")
+        }
+    }
+
+    def getServiceHelmCommand(service) {
+        def servicesCommands = ["postgres": new StringBuilder()
+                .append("--set dbName=postgres ")
+                .append("--set memoryLimit=512Mi ")
+                .append("--set pgPassword=stub-pass ")
+                .append("--set pgUsername=postgres ")
+                .append("--set serviceImage=postgres ")
+                .append("--set serviceName=service.name ")
+                .append("--set serviceVersion=service.version ")
+                .append("--set port=5432 ")
+                .append("--set storageSize=10Gi ")
+                .append("--set storageClass=gp2").toString(),
+                                "rabbitmq": new StringBuilder()
+                                        .append("--set password=postgres ")
+                                        .append("--set serviceImage=postgres ")
+                                        .append("--set serviceName=service.name ")
+                                        .append("--set serviceVersion=service.version ")
+                                        .append("--set username=postgres ")
+                                        .append("--set storageSize=postgres ")
+                                        .append("--set storageClass=postgres ")
+                                        .append("--set containerListenerPort=postgres ")
+                                        .append("--set containerManagementPort=postgres ")
+                                        .append("--set memoryLimit=postgres ")
+                                        .append("--set platform=postgres ")
+                                        .append("--set namespace=postgres ")
+                                        .append("--set dnsWildCard=postgres ").toString()
+        ]
+        return servicesCommands[service.name]
+    }
+
     void run(context) {
         context.platform.createProjectIfNotExist(context.job.deployProject, context.job.edpName)
 
@@ -297,29 +341,8 @@ class Deploy {
             context.platform.createRoleBinding(context.job.buildUser, "admin", context.job.deployProject)
         }
 
-        while (!context.job.servicesList.isEmpty()) {
-            def parallelServices = [:]
-            def tempServiceList = getNElements(context.job.servicesList, context.job.maxOfParallelDeployServices)
-
-            tempServiceList.each() { service ->
-                if (!checkOpenshiftTemplateExists(context, service.name))
-                    return
-
-                context.platform.addSccToUser(service.name, 'anyuid', context.job.deployProject)
-
-                def deploymentWorkloadsList = getDeploymentWorkloadsList(service.name, true)
-                parallelServices["${service.name}"] = {
-                    script.sh("oc -n ${context.job.ciProject} process ${service.name} " +
-                            "-p SERVICE_VERSION=${service.version} " +
-                            "-o json | oc -n ${context.job.deployProject} apply -f -")
-                    deploymentWorkloadsList.each() { workload ->
-                        checkDeployment(context, workload.name, 'service', workload.kind)
-                    }
-                }
-            }
-
-            script.parallel parallelServices
-        }
+        def chartmuseumUrl = context.job.getParameterValue("CHARTMUSEUM_URL", "https://chartmuseum-oc-green-edp-cicd.delivery.aws.main.edp.projects.epam.com")
+        deployServices(chartmuseumUrl, context.job.servicesList, context.job.ciProject)
 
         def deployCodebasesList = context.job.codebasesList.clone()
         while (!deployCodebasesList.isEmpty()) {
@@ -350,7 +373,7 @@ class Deploy {
                     return
 
                 context.platform.addSccToUser(codebase.name, 'anyuid', context.job.deployProject)
-                context.platform.createRoleBinding("system:serviceaccount:${context.job.deployProject}", "view",context.job.deployProject)
+                context.platform.createRoleBinding("system:serviceaccount:${context.job.deployProject}", "view", context.job.deployProject)
 
                 context.environment.config.dockerRegistryHost = getDockerRegistryInfo(context)
                 parallelCodebases["${codebase.name}"] = {
