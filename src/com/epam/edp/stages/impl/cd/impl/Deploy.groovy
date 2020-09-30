@@ -285,6 +285,56 @@ class Deploy {
         return tempEntityList
     }
 
+    void deployServices(context) {
+        script.println("[JENKINS][DEBUG] Start service deploying.")
+
+        def chartmuseumUrl = context.job.getParameterValue("CHARTMUSEUM_URL", "https://chartmuseum-oc-green-edp-cicd.delivery.aws.main.edp.projects.epam.com")
+        script.sh("helm repo add epamedp ${chartmuseumUrl}")
+
+        context.job.servicesList.each() { s ->
+            def params = getServiceHelmCommand(s, context.job.dnsWildcard, context.job.deployProject)
+            deployService(s.name, s.url, params, context.job.deployProject)
+        }
+    }
+
+    def deployService(name, chartPath, params, ns) {
+        def command = "helm -n ${ns} upgrade --atomic --install ${name} ${chartPath} --wait --timeout=300s"
+        if (params) {
+            for (p in params) {
+                command = "${command} --set ${p.name}=${p.value}"
+            }
+        }
+        script.sh(command)
+    }
+
+    def getServiceHelmCommand(service, dnsWildcard, ns) {
+        return [
+                'postgres': [
+                        ['name': 'dbName', 'value': "${service.name}"],
+                        ['name': 'memoryLimit', 'value': "512Mi"],
+                        ['name': 'serviceImage', 'value': "postgres"],
+                        ['name': 'serviceName', 'value': "${service.name}"],
+                        ['name': 'serviceVersion', 'value': "${service.version}"],
+                        ['name': 'port', 'value': "5432"],
+                        ['name': 'storageSize', 'value': "10Gi"],
+                        ['name': 'storageClass', 'value': "gp2"],
+                ],
+                'rabbitmq': [
+                        ['name': 'serviceImage', 'value': "rabbitmq"],
+                        ['name': 'serviceName', 'value': "${service.name}"],
+                        ['name': 'serviceVersion', 'value': "${service.version}"],
+                        ['name': 'storageSize', 'value': "10Gi"],
+                        ['name': 'storageClass', 'value': "gp2"],
+                        ['name': 'containerListenerPort', 'value': "5672"],
+                        ['name': 'containerManagementPort', 'value': "15672"],
+                        ['name': 'memoryLimit', 'value': "512Mi"],
+                        ['name': 'platform', 'value': "${System.getenv("PLATFORM_TYPE")}"],
+                        ['name': 'namespace', 'value': "${ns}"],
+                        ['name': 'dnsWildCard', 'value': "${dnsWildcard}"],
+                ]
+        ][service.name]
+    }
+
     void run(context) {
         context.platform.createProjectIfNotExist(context.job.deployProject, context.job.edpName)
 
@@ -297,29 +347,7 @@ class Deploy {
             context.platform.createRoleBinding(context.job.buildUser, "admin", context.job.deployProject)
         }
 
-        while (!context.job.servicesList.isEmpty()) {
-            def parallelServices = [:]
-            def tempServiceList = getNElements(context.job.servicesList, context.job.maxOfParallelDeployServices)
-
-            tempServiceList.each() { service ->
-                if (!checkOpenshiftTemplateExists(context, service.name))
-                    return
-
-                context.platform.addSccToUser(service.name, 'anyuid', context.job.deployProject)
-
-                def deploymentWorkloadsList = getDeploymentWorkloadsList(service.name, true)
-                parallelServices["${service.name}"] = {
-                    script.sh("oc -n ${context.job.ciProject} process ${service.name} " +
-                            "-p SERVICE_VERSION=${service.version} " +
-                            "-o json | oc -n ${context.job.deployProject} apply -f -")
-                    deploymentWorkloadsList.each() { workload ->
-                        checkDeployment(context, workload.name, 'service', workload.kind)
-                    }
-                }
-            }
-
-            script.parallel parallelServices
-        }
+        deployServices(context)
 
         def deployCodebasesList = context.job.codebasesList.clone()
         while (!deployCodebasesList.isEmpty()) {
@@ -350,7 +378,7 @@ class Deploy {
                     return
 
                 context.platform.addSccToUser(codebase.name, 'anyuid', context.job.deployProject)
-                context.platform.createRoleBinding("system:serviceaccount:${context.job.deployProject}", "view",context.job.deployProject)
+                context.platform.createRoleBinding("system:serviceaccount:${context.job.deployProject}", "view", context.job.deployProject)
 
                 context.environment.config.dockerRegistryHost = getDockerRegistryInfo(context)
                 parallelCodebases["${codebase.name}"] = {
