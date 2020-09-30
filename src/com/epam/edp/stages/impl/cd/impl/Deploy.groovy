@@ -285,6 +285,75 @@ class Deploy {
         return tempEntityList
     }
 
+    void deployServices(context, chartmuseumUrl) {
+        script.println("[JENKINS][DEBUG] Start service deploying.")
+
+        script.sh("helm repo add epamedp ${chartmuseumUrl}")
+
+        context.job.servicesList.each() { s ->
+            def params = getServiceHelmCommand(s, context.job.dnsWildcard, context.job.deployProject)
+            deployService(s.name, s.url, params, context.job.deployProject)
+        }
+    }
+
+    def deployService(name, chartPath, params, ns) {
+        def command = "helm -n ${ns} install ${name} ${chartPath} --wait --timeout=100"
+        if (params) {
+            for (p in params) {
+                command = "${command} --set ${p.name}=${p.value}"
+            }
+        }
+        script.sh(command)
+    }
+
+    def getServiceHelmCommand(service, dnsWildcard, ns) {
+        def postgresUsername = "postgres"
+        def postgresPass = RandomStringUtils.random(10, true, true)
+        def rabbitmqUsername = "admin"
+        def rabbitmqPass = RandomStringUtils.random(10, true, true)
+        createSecret(ns, "postgres-admin", ['username': postgresUsername, 'password': postgresPass])
+        createSecret(ns, "rabbitmq-admin", ['username': rabbitmqUsername, 'password': rabbitmqPass])
+
+        return [
+                'postgres': [
+                        ['name': 'dbName', 'value': "${service.name}"],
+                        ['name': 'memoryLimit', 'value': "512Mi"],
+                        ['name': 'pgPassword', 'value': "${postgresPass}"],
+                        ['name': 'pgUsername', 'value': "${postgresUsername}"],
+                        ['name': 'serviceImage', 'value': "postgres"],
+                        ['name': 'serviceName', 'value': "${service.name}"],
+                        ['name': 'serviceVersion', 'value': "${service.version}"],
+                        ['name': 'port', 'value': "5432"],
+                        ['name': 'storageSize', 'value': "10Gi"],
+                        ['name': 'storageClass', 'value': "gp2"],
+                ],
+                'rabbitmq': [
+                        ['name': 'serviceImage', 'value': "rabbitmq"],
+                        ['name': 'serviceName', 'value': "${service.name}"],
+                        ['name': 'serviceVersion', 'value': "${service.version}"],
+                        ['name': 'username', 'value': "${rabbitmqUsername}"],
+                        ['name': 'password', 'value': "${rabbitmqPass}"],
+                        ['name': 'storageSize', 'value': "10Gi"],
+                        ['name': 'storageClass', 'value': "gp2"],
+                        ['name': 'containerListenerPort', 'value': "5672"],
+                        ['name': 'containerManagementPort', 'value': "15672"],
+                        ['name': 'memoryLimit', 'value': "512Mi"],
+                        ['name': 'platform', 'value': "${System.getenv("PLATFORM_TYPE")}"],
+                        ['name': 'namespace', 'value': "${ns}"],
+                        ['name': 'dnsWildCard', 'value': "${dnsWildcard}"],
+                ]
+        ][service.name]
+    }
+
+    def createSecret(namespace, name, params) {
+        script.println("[JENKINS][DEBUG] Create secret: ${name}")
+        def command = "oc create secret generic ${name} -n ${namespace} "
+        params.each {
+            command += " --from-literal=${it.key}=${it.value}"
+        }
+        script.sh(command)
+    }
+
     void run(context) {
         context.platform.createProjectIfNotExist(context.job.deployProject, context.job.edpName)
 
@@ -297,29 +366,9 @@ class Deploy {
             context.platform.createRoleBinding(context.job.buildUser, "admin", context.job.deployProject)
         }
 
-        while (!context.job.servicesList.isEmpty()) {
-            def parallelServices = [:]
-            def tempServiceList = getNElements(context.job.servicesList, context.job.maxOfParallelDeployServices)
-
-            tempServiceList.each() { service ->
-                if (!checkOpenshiftTemplateExists(context, service.name))
-                    return
-
-                context.platform.addSccToUser(service.name, 'anyuid', context.job.deployProject)
-
-                def deploymentWorkloadsList = getDeploymentWorkloadsList(service.name, true)
-                parallelServices["${service.name}"] = {
-                    script.sh("oc -n ${context.job.ciProject} process ${service.name} " +
-                            "-p SERVICE_VERSION=${service.version} " +
-                            "-o json | oc -n ${context.job.deployProject} apply -f -")
-                    deploymentWorkloadsList.each() { workload ->
-                        checkDeployment(context, workload.name, 'service', workload.kind)
-                    }
-                }
-            }
-
-            script.parallel parallelServices
-        }
+        def chartmuseumUrl = context.job.getParameterValue("CHARTMUSEUM_URL", "https://chartmuseum-oc-green-edp-cicd.delivery.aws.main.edp.projects.epam.com")
+//        deployServices(chartmuseumUrl, context.job.servicesList, context.job.dnsWildcard, context.job.deployProject)
+        deployServices(context, chartmuseumUrl)
 
         def deployCodebasesList = context.job.codebasesList.clone()
         while (!deployCodebasesList.isEmpty()) {
@@ -350,7 +399,7 @@ class Deploy {
                     return
 
                 context.platform.addSccToUser(codebase.name, 'anyuid', context.job.deployProject)
-                context.platform.createRoleBinding("system:serviceaccount:${context.job.deployProject}", "view",context.job.deployProject)
+                context.platform.createRoleBinding("system:serviceaccount:${context.job.deployProject}", "view", context.job.deployProject)
 
                 context.environment.config.dockerRegistryHost = getDockerRegistryInfo(context)
                 parallelCodebases["${codebase.name}"] = {
