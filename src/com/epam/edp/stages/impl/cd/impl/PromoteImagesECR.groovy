@@ -82,7 +82,8 @@ class PromoteImagesECR {
 
                 script.dir("${context.workDir}") {
                     try {
-                        def kanikoTemplateFilePath = setKanikoTemplate("${context.workDir}/kaniko-template.json", buildconfigName, codebase.outputIs, dockerRegistryHost, context, codebase)
+                        def kanikoTemplateFilePath = setKanikoTemplate("${context.workDir}/kaniko-template.json", buildconfigName,
+                                "${context.job.ciProject}-${codebase.outputIs}", dockerRegistryHost, context, codebase)
                         context.platform.apply(kanikoTemplateFilePath.getRemote())
                         while (!context.platform.getObjectStatus("pod", buildconfigName)["initContainerStatuses"][0].state.keySet().contains("running")) {
                             script.println("[JENKINS][DEBUG] Waiting for init container in Kaniko is started")
