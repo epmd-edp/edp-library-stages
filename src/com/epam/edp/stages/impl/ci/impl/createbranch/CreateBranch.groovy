@@ -33,7 +33,7 @@ class CreateBranch {
                 ssh-keyscan -p ${context.git.sshPort} ${context.git.host} >> ~/.ssh/known_hosts
                 git config --global user.email ${context.git.autouser}@epam.com
                 git config --global user.name ${context.git.autouser}
-                if [[ -z \$(git branch --list ${context.job.releaseName}) ]]; then
+                if [[ -z `git branch --list ${context.job.releaseName}` ]]; then
                     git branch ${context.job.releaseName} ${context.job.releaseFromCommitId}
                     git push --all
                 else
