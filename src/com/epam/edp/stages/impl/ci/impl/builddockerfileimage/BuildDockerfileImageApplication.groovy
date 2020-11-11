@@ -50,6 +50,11 @@ class BuildDockerfileImageApplication {
 
                 createOrUpdateBuildConfig(context.codebase, buildconfigName, imageUrl)
 
+                script.println("[JENKINS][DEBUG] Print workdir for openshift")
+                script.sh("ls -la ${context.workDir}")
+                script.println("[JENKINS][DEBUG] Print deployableModuleDir for openshift")
+                script.sh("ls -la ${context.codebase.deployableModuleDir}")
+
                 script.dir(context.codebase.deployableModuleDir) {
                     if ("${context.workDir}" != "${context.codebase.deployableModuleDir}") {
                         script.sh "cp ${context.workDir}/Dockerfile ${context.codebase.deployableModuleDir}/"
