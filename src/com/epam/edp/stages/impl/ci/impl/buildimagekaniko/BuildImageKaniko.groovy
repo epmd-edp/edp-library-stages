@@ -83,6 +83,9 @@ class BuildImageKaniko {
                     script.sleep(5)
                 }
 
+                script.println("[JENKINS][DEBUG] Print workdir for kaniko")
+                script.sh("ls -la ${context.workDir}")
+
                 def deployableModuleDirFilepath = new FilePath(Jenkins.getInstance().getComputer(script.env['NODE_NAME']).getChannel(), "${context.workDir}")
                 script.println("[JENKINS][DEBUG] Files to copy to kaniko - ${deployableModuleDirFilepath.list()}")
                 deployableModuleDirFilepath.list().each() { item ->
