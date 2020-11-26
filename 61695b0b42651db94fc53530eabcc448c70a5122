@@ -1,0 +1,7 @@
+Verified+1: CI Jenkins
+Code-Review+2: Sergiy Kulanov <sergiy_kulanov@epam.com>
+Submitted-by: Mykola Marusenko <mykola_marusenko@epam.com>
+Submitted-at: Thu, 26 Nov 2020 17:11:45 +0000
+Reviewed-on: https://gerrit-oc-green-edp-cicd.delivery.aws.main.edp.projects.epam.com/c/edp-library-stages/+/6224
+Project: edp-library-stages
+Branch: refs/heads/release-2.6
