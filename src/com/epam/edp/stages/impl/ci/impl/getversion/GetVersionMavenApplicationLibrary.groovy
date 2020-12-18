@@ -44,6 +44,7 @@ class GetVersionMavenApplicationLibrary {
 
     void run(context) {
         script.dir("${context.workDir}") {
+            script.println("[JENKINS][DEBUG] SEE HERE ---->>>> ${context.workDir}")
             script.withCredentials([script.usernamePassword(credentialsId: "${context.nexus.credentialsId}",
                     passwordVariable: 'PASSWORD', usernameVariable: 'USERNAME')]) {
                 if (context.codebase.config.versioningType == "edp") {
