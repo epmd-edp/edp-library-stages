@@ -25,11 +25,11 @@ class GetVersionMavenApplicationLibrary {
     def setVersionToArtifact(context) {
         script.sh """
             set -eo pipefail
-            if ${context.codebase.isReleaseBranch}; then
+            if true; then
                 find . -name 'pom.xml' | xargs -i sed -i '/<groupId>com.epam.edp<\\/groupId>/ {
                     :start
                     N
-                    s/\\(<version>\\).*\\(<\\/version>\\)/\\1'"${context.codebase.branchVersion}-${context.codebase.currentBuildNumber}"'\\2/
+                    s/\\(<version>\\).*\\(<\\/version>\\)/\\1'"test-1"'\\2/
                 }' {}
             else
                 find . -name 'pom.xml' | xargs -i sed -i '/<groupId>com.epam.edp<\\/groupId>/ {
@@ -44,6 +44,7 @@ class GetVersionMavenApplicationLibrary {
 
     void run(context) {
         script.dir("${context.workDir}") {
+            script.println("[JENKINS][DEBUG] SEE HERE ---->>>> ${context.workDir}")
             script.withCredentials([script.usernamePassword(credentialsId: "${context.nexus.credentialsId}",
                     passwordVariable: 'PASSWORD', usernameVariable: 'USERNAME')]) {
                 if (context.codebase.config.versioningType == "edp") {
