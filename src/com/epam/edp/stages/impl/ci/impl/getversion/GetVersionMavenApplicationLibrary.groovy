@@ -23,23 +23,24 @@ class GetVersionMavenApplicationLibrary {
     Script script
 
     def setVersionToArtifact(context) {
+        def version = getVersion(context.codebase)
+        def multiModule = "${context.codebase.config.framework}".endsWith("multimodule")
+        script.println("[JENKINS][DEBUG] multiModule - ${multiModule}")
+
         script.sh """
             set -eo pipefail
-            if ${context.codebase.isReleaseBranch}; then
-                find . -name 'pom.xml' | xargs -i sed -i '/<groupId>com.epam.edp<\\/groupId>/ {
-                    :start
-                    N
-                    s/\\(<version>\\).*\\(<\\/version>\\)/\\1'"${context.codebase.branchVersion}-${context.codebase.currentBuildNumber}"'\\2/
-                }' {}
-            else
-                find . -name 'pom.xml' | xargs -i sed -i '/<groupId>com.epam.edp<\\/groupId>/ {
-                    :start
-                    N
-                    s/\\(<version>\\).*\\(<\\/version>\\)/\\1'"${context.codebase.branchVersion}"'\\2/
-                }' {}
+            find . -maxdepth 1 -name 'pom.xml' | xargs -i sed -i "0,/<version>.*<\\/version>/s/<version>.*<\\/version>/<version>${version}<\\/version>/" {}
+            if ${multiModule}; then
+                find . -maxdepth 1 -name 'pom.xml' | xargs -i sed -i "0,/<parent.version>.*<\\/parent.version>/s/<parent.version>.*<\\/parent.version>/<parent.version>${version}<\\/parent.version>/" {}
             fi
             kubectl patch codebasebranches.v2.edp.epam.com ${context.codebase.config.name}-${context.git.branch.replaceAll(/\//, "-")} --type=merge -p '{\"status\": {\"build\": "${context.codebase.currentBuildNumber}"}}'
         """
+    }
+
+    def getVersion(codebase) {
+        return codebase.isReleaseBranch
+                ? "${codebase.branchVersion}-${codebase.currentBuildNumber}"
+                : "${codebase.branchVersion}"
     }
 
     void run(context) {
