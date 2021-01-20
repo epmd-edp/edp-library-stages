@@ -46,6 +46,8 @@ class JiraIssueMetadata {
     def getJiraIssueMetadataPayload(platform, name) {
         script.println("[JENKINS][DEBUG] Getting JiraIssueMetadataPayload of ${name} Codebase CR")
         def payload = platform.getJsonPathValue("codebases", name, ".spec.jiraIssueMetadataPayload")
+        script.println("[JENKINS][DEBUG] ----------> ${payload}")
+        script.println("[JENKINS][DEBUG] ----------> ${!payload}")
         if (!payload) {
             return null
         }
