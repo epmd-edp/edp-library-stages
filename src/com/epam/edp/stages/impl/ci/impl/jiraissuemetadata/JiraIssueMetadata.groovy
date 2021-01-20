@@ -101,10 +101,10 @@ class JiraIssueMetadata {
 
         def payload = getPayloadField(context.platform, context.codebase.config.name, context.codebase.isTag, context.codebase.vcsTag)
         if (payload == null) {
-            template.spec.payload = new JsonBuilder(['issuesLinks': links])
+            template.spec.payload = new JsonBuilder(['issuesLinks': links]).toPrettyString()
         } else {
             payload.put('issuesLinks', links)
-            template.spec.payload = new JsonBuilder(payload)
+            template.spec.payload = new JsonBuilder(payload).toPrettyString()
         }
         script.println("[JENKINS][DEBUG] Template to apply: ${template}")
         return JsonOutput.toJson(template)
