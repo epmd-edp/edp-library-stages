@@ -22,6 +22,7 @@ import groovy.json.JsonSlurper
 import groovy.json.JsonSlurperClassic
 import groovy.json.JsonSlurper
 import hudson.FilePath
+import groovy.json.JsonBuilder
 
 @Stage(name = "create-jira-issue-metadata", buildTool = ["maven", "npm", "dotnet", "gradle", "any"], type = [ProjectType.APPLICATION, ProjectType.AUTOTESTS, ProjectType.LIBRARY])
 class JiraIssueMetadata {
@@ -88,11 +89,11 @@ class JiraIssueMetadata {
 
             (info.getCommitMessage() =~ /(?m)${commitMsgPattern}/).each { match ->
                 def url = "${jenkinsUrl}/job/${context.codebase.config.name}/job/${context.job.getParameterValue("BRANCH").toUpperCase()}-Build-${context.codebase.config.name}/${script.BUILD_NUMBER}/console"
-                def linkText = "${match.find(/(?<=\:).*/)} [${context.codebase.config.name}][${context.codebase.vcsTag}]"
+                def title = "${match.find(/(?<=\:).*/)} [${context.codebase.config.name}][${context.codebase.vcsTag}]"
                 def linkInfo = [
-                        'ticket'  : match.find(/${ticketNamePattern}/),
-                        'linkText': linkText,
-                        'url'     : url,
+                        'ticket': match.find(/${ticketNamePattern}/),
+                        'title' : title,
+                        'url'   : url,
                 ]
                 links.add(linkInfo)
             }
@@ -100,9 +101,9 @@ class JiraIssueMetadata {
 
         def payload = getPayloadField(context.platform, context.codebase.config.name, context.codebase.isTag, context.codebase.vcsTag)
         if (payload == null) {
-            template.spec.payload = ['links': links]
+            template.spec.payload = ['issuesLinks': new JsonBuilder(links)]
         } else {
-            payload.put('links', links)
+            payload.put('issuesLinks', new JsonBuilder(links))
             template.spec.payload = payload
         }
         script.println("[JENKINS][DEBUG] Template to apply: ${template}")
