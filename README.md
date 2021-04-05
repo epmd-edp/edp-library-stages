@@ -1,3 +1,6 @@
+|![](https://upload.wikimedia.org/wikipedia/commons/thumb/1/17/Warning.svg/156px-Warning.svg.png) | This project is moved to [https://github.com/epam/edp-jlibrary-stages](https://github.com/epam/edp-library-stages)
+|---|---|
+
 # EDP Library Stages
 
 The **EDP Library Stages** repository describes the specific stages and their realization in frames of a specific pipeline. 
