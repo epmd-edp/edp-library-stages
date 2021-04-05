@@ -1,4 +1,4 @@
-|![](https://upload.wikimedia.org/wikipedia/commons/thumb/1/17/Warning.svg/156px-Warning.svg.png) | This project is moved to [https://github.com/epam/edp-jlibrary-stages](https://github.com/epam/edp-library-stages)
+|![](https://upload.wikimedia.org/wikipedia/commons/thumb/1/17/Warning.svg/156px-Warning.svg.png) | This project is moved to [https://github.com/epam/edp-library-stages](https://github.com/epam/edp-library-stages)
 |---|---|
 
 # EDP Library Stages
